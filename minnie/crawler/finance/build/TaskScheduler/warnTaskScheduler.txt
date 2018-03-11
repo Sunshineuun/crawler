@@ -1,0 +1,57 @@
+missing module named 'multiprocessing.forking' - imported by c:\program files\python36\lib\site-packages\PyInstaller\loader\rthooks\pyi_rth_multiprocessing.py
+missing module named multiprocessing.get_context - imported by multiprocessing, multiprocessing.pool, multiprocessing.managers, multiprocessing.sharedctypes
+missing module named multiprocessing.TimeoutError - imported by multiprocessing, multiprocessing.pool
+missing module named multiprocessing.AuthenticationError - imported by multiprocessing, multiprocessing.connection
+missing module named multiprocessing.BufferTooShort - imported by multiprocessing, multiprocessing.connection
+missing module named multiprocessing.get_start_method - imported by multiprocessing, multiprocessing.spawn
+missing module named multiprocessing.set_start_method - imported by multiprocessing, multiprocessing.spawn
+missing module named multiprocessing.SimpleQueue - imported by multiprocessing, concurrent.futures.process
+missing module named pyimod03_importers - imported by c:\program files\python36\lib\site-packages\PyInstaller\loader\rthooks\pyi_rth_pkgres.py
+missing module named 'pkg_resources.extern.pyparsing' - imported by pkg_resources._vendor.packaging.requirements, pkg_resources._vendor.packaging.markers
+missing module named 'com.sun' - imported by pkg_resources._vendor.appdirs
+missing module named com - imported by pkg_resources._vendor.appdirs
+missing module named win32api - imported by pkg_resources._vendor.appdirs
+missing module named win32com.shell - imported by pkg_resources._vendor.appdirs
+missing module named netbios - imported by uuid
+missing module named win32wnet - imported by uuid
+missing module named __builtin__ - imported by pymysql._compat, pkg_resources._vendor.pyparsing
+missing module named ordereddict - imported by html5lib.html5parser, html5lib.treewalkers.etree, html5lib.filters.alphabeticalattributes, pkg_resources._vendor.pyparsing
+missing module named StringIO - imported by six, pkg_resources._vendor.six
+missing module named __main__ - imported by pkg_resources
+missing module named pkg_resources.extern.packaging - imported by pkg_resources.extern, pkg_resources
+missing module named pkg_resources.extern.appdirs - imported by pkg_resources.extern, pkg_resources
+missing module named 'pkg_resources.extern.six.moves' - imported by pkg_resources, pkg_resources._vendor.packaging.requirements
+missing module named pkg_resources.extern.six - imported by pkg_resources.extern, pkg_resources
+missing module named resource - imported by posix, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named posix - imported by os, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named _posixsubprocess - imported by subprocess, multiprocessing.util, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named org - imported by pickle, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named readline - imported by cmd, code, pdb, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+excluded module named _frozen_importlib - imported by importlib, importlib.abc, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named _frozen_importlib_external - imported by importlib._bootstrap, importlib, importlib.abc, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named _winreg - imported by platform, tzlocal.win32, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py, pkg_resources._vendor.appdirs
+missing module named _scproxy - imported by urllib.request
+missing module named java - imported by platform, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named 'java.lang' - imported by platform, xml.sax._exceptions, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named vms_lib - imported by platform, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named termios - imported by tty, getpass, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named grp - imported by shutil, tarfile, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named pwd - imported by posixpath, shutil, tarfile, http.server, webbrowser, distutils.util, netrc, getpass, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named _dummy_threading - imported by dummy_threading, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named 'org.python' - imported by copy, xml.sax, D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\finance\TaskScheduler.py
+missing module named ConfigParser - imported by pymysql.optionfile
+missing module named iconv_codec - imported by bs4.dammit
+missing module named cchardet - imported by bs4.dammit
+missing module named html5lib.treebuilders._base - imported by html5lib.treebuilders, bs4.builder._html5lib
+runtime module named six.moves - imported by html5lib._inputstream, html5lib.filters.sanitizer
+missing module named 'six.moves.urllib' - imported by 'six.moves.urllib'
+missing module named 'genshi.core' - imported by html5lib.treewalkers.genshi
+missing module named genshi - imported by html5lib.treewalkers.genshi
+missing module named datrie - imported by html5lib._trie.datrie
+missing module named win32evtlog - imported by logging.handlers
+missing module named win32evtlogutil - imported by logging.handlers
+missing module named funcsigs - imported by apscheduler.util
+missing module named cStringIO - imported by pytz.tzfile
+missing module named copy_reg - imported by cStringIO
+missing module named sets - imported by pytz.tzinfo
+missing module named UserDict - imported by pytz.lazy
