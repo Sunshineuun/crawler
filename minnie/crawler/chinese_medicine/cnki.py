@@ -55,7 +55,7 @@ def zgzw_recur_row(dic, s, arr=None):
         arr.append(s + value['name'] + '#')
 
 
-class ZGZW(object):
+class cnki(object):
     """
     中国知网，中药方剂信息爬取
     方剂目录地址：http://kb.tcm.cnki.net/TCM/TCM/Guide?node=12719&dbcode=zyff

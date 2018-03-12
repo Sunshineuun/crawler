@@ -7,10 +7,13 @@ url资源池
 import datetime
 import queue
 
+from minnie.crawler.common.MongoDB import MongodbCursor
+
 
 class URLPool(object):
     """
     用MongoDB存储url
+
     """
 
     def __init__(self, mongo, name):
@@ -22,7 +25,7 @@ class URLPool(object):
         self.url_name = 'url_' + name
         self._queue = queue.Queue(maxsize=1000)
         self.cursor = mongo.get_cursor('minnie', self.url_name)
-        self.find_db()
+        self.find_by_db()
         print('urlpool init!')
 
     def put(self, params):
@@ -39,16 +42,10 @@ class URLPool(object):
 
     def get(self):
         """
-        获取数据，
-        1.队列不为空返回数据
-        2.队列为空，则从数据库中取数据，如果取到数据则返回数据
-        3.以上两步都没有返回数据则返回false
+        获取数据
         :return:
         """
-        if self.empty() is False:
-            return self._queue.get()
-
-        if not self.find_db():
+        if not self.empty():
             return self._queue.get()
 
         return False
@@ -57,11 +54,7 @@ class URLPool(object):
         """
         :return:空返回True，非空返回False
         """
-        for temp in self.cursor.find({'isenable': '1'}).limit(2000):
-            if self.full():
-                break
-            self._queue.put(temp)
-        return self._queue.empty()
+        return self.find_by_db()
 
     def full(self):
         """
@@ -71,12 +64,19 @@ class URLPool(object):
         """
         return self._queue.full()
 
-    def find_db(self):
-        for temp in self.cursor.find({'isenable': '1'}).limit(2000):
-            if self.full():
-                break
-            self._queue.put(temp)
-        return not self.empty()
+    def find_by_db(self):
+        """
+        从数据库中进行加载
+        :return:空返回True，非空返回False
+        :return:
+        """
+        # 内存队列为空了，再去数据库加载否则不加载
+        if self._queue.empty():
+            for temp in self.cursor.find({'isenable': '1'}):
+                if self.full():
+                    break
+                self.put(temp)
+        return self._queue.empty()
 
     def save_to_db(self, params):
         params['isenable'] = '1'
@@ -85,3 +85,15 @@ class URLPool(object):
 
     def find_all_count(self):
         return self.cursor.find().count()
+
+
+if __name__ == '__main__':
+    mongo = MongodbCursor('192.168.16.113')
+    urlpool = URLPool(mongo, 'test')
+    urlpool.put({'1': '1'})
+    urlpool.put({'1': '1'})
+    urlpool.put({'1': '1'})
+
+    """
+        contains
+    """

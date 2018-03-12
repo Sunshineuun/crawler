@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 # qiushengming-minnie
-import datetime
 import random
 import time
 
@@ -23,6 +22,9 @@ def check_rule(html):
     :return:
     """
     _soup = BeautifulSoup(html, 'html.parser')
+    # 可能存在tbody为空的情况，为空则该了解无效
+    tbody = _soup.find('tbody')
+
     tag = _soup.find('span', class_='toFindImg')
     if tag is not None and tag.text == '暂无权限':
         return True
@@ -34,9 +36,11 @@ def check_rule(html):
         return False
 
 
-class YAZHI_ZYFZ(object):
+class yaozh(object):
     """
     药智网-中药方剂
+    耗时：约14h
+    数据量：34235条中药方剂
     """
 
     def __init__(self, url_pool, mongo):
@@ -51,6 +55,24 @@ class YAZHI_ZYFZ(object):
             'username': '583853240@qq.com',
             'pwd': 'sy3hz3kk'
         }]
+
+    def init_url(self, url_pool):
+        """
+        https://db.yaozh.com/fangji/10000001.html
+        初始化到数据库中
+        :return: 模板
+        """
+        if url_pool.find_all_count():
+            return
+        url_template = 'https://db.yaozh.com/fangji/{code}.html'
+        for i in range(35000):
+            params = {
+                '_id': i,
+                'url': url_template.format(code=10000001 + i),
+                'type': '药智网-中药方剂'
+            }
+            url_pool.save_to_db(params)
+        logger.info('url初始结束！！！')
 
     def logout(self, driver):
         # logout
@@ -67,7 +89,7 @@ class YAZHI_ZYFZ(object):
         :return:
         """
 
-        temp_user = self.user[random.randint(0, len(self.user)-1)]
+        temp_user = self.user[random.randint(0, len(self.user) - 1)]
         login_url = 'https://www.yaozh.com/login'
         driver = self.crawler.get_driver()
         driver.get(login_url)
@@ -88,7 +110,7 @@ class YAZHI_ZYFZ(object):
 
         logger.info('登陆成功')
 
-    def start_crawler(self):
+    def request_data(self):
         """
         数据爬取模块
         2018年3月11日
@@ -125,44 +147,50 @@ class YAZHI_ZYFZ(object):
         结构化
         :return:
         """
-        html_cursor = self._mongo.get_cursor('zyfj_data', 'yzw')
+        html_cursor = self._mongo.get_cursor('zyfj', 'yzw_html')
         data_cursor = self._mongo.get_cursor('zyfj_data', 'yzw')
+        url_cursor = self._mongo.get_cursor('minnie', 'url_yzw_zyfj')
 
-        id = 0
-        for html in html_cursor.find():
-            _soup = BeautifulSoup(html, 'html.parser')
-            tbody = _soup.find('tbody')
-            trs = tbody.find_all('tr')
-            row = {}
-            for tr in trs:
-                row[tr.th.text] = tr.td.span.text
+        for i, data in enumerate(html_cursor.find()):
+            if i % 1000 == 0:
+                logger.info(i)
+            soup = BeautifulSoup(data['html'], 'html.parser')
+            tbody = soup.find('tbody')
+            if tbody:
+                trs = tbody.find_all('tr')
+                row = {}
+                for tr in trs:
+                    row[tr.th.text] = tr.td.span.text
 
-            row['_id'] = id
-            data_cursor.insert(row)
+                row['_id'] = data['_id']
+                row['url'] = data['url']
+                data_cursor.insert(row)
+            else:
+                logger.error(data['url'])
+                url_cursor.update({
+                    'url': data['url']
+                }, {
+                    '$set': {
+                        'isenable': '1'
+                    }
+                })
 
-            id += 1
 
-    def init_url(self, url_pool):
-        """
-        https://db.yaozh.com/fangji/10000001.html
-        初始化到数据库中
-        :return: 模板
-        """
-        if url_pool.find_all_count():
-            return
-        url_template = 'https://db.yaozh.com/fangji/{code}.html'
-        for i in range(34235):
-            params = {
-                '_id': i,
-                'url': url_template.format(code=10000001 + i),
-                'type': '药智网-中药方剂'
-            }
-            url_pool.save_to_db(params)
-        logger.info('url初始结束！！！')
+def getcount():
+    """
+    待处理
+    :return:
+    """
+    mongo = MongodbCursor('192.168.16.113')
+    cursor = mongo.get_cursor('minnie', 'url_yzw_zyfj')
+    print(
+        cursor.find({'isenable': '1'}).count()
+    )
 
 
 if __name__ == '__main__':
     mongo = MongodbCursor('192.168.16.113')
     urlpool = URLPool(mongo, 'yzw_zyfj')
-    zyfz = YAZHI_ZYFZ(urlpool, mongo)
-    zyfz.start_crawler()
+    zyfz = yaozh(urlpool, mongo)
+    zyfz.request_data()
+    zyfz.parser()
