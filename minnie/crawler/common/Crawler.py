@@ -8,6 +8,7 @@ import datetime
 import json
 from urllib import request, error, parse
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from minnie.common import mlogger
 
@@ -22,13 +23,23 @@ def getHttpStatus(browser):
     """
     for responseReceived in browser.get_log('performance'):
         try:
-            response = json.loads(responseReceived[u'message'])[u'message'][u'params'][u'response']
-            if response['status'] is not '200':
-                return False
-        except BaseException as e:
-            logger.error(e)
+            _json = json.loads(responseReceived[u'message'])
+            # [u'message'][u'params'][u'response']
+            if 'message' in _json \
+                    and 'params' in _json['message'] \
+                    and 'response' in _json['message']['params']:
+                response = _json['message']['params']['response']
 
-    return True
+                if response['url'] == browser.current_url \
+                    and response['status'] == 200:
+                    return True
+                # if response['status'] is not '200':
+                #     return False
+        except:
+            # 说明没有response
+            pass
+
+    return False
 
 
 class Crawler(object):
@@ -51,9 +62,13 @@ class Crawler(object):
         prefs = {"profile.managed_default_content_settings.images": 2}
 
         options.add_experimental_option("prefs", prefs)
+
+        desired_capabilities = DesiredCapabilities.CHROME
+        desired_capabilities['loggingPrefs'] = {'performance': 'ALL'}
+
         self.driver = webdriver.Chrome(executable_path=executable_path,
-                                       chrome_options=options)
-        self.driver.set_window_size(width=100, height=100)
+                                       chrome_options=options,
+                                       desired_capabilities=desired_capabilities)
 
         # 代理设置
         # proxy = request.ProxyHandler({'http': '5.22.195.215:80'})  # 设置proxy
@@ -71,8 +86,8 @@ class Crawler(object):
         """
         self.driver.get(url)
 
-        if not getHttpStatus(self.driver):
-            return False
+        # if not getHttpStatus(self.driver):
+        #     return False
 
         index = 4
         # 规则存在执行校验规则
