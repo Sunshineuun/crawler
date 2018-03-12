@@ -5,6 +5,8 @@ import datetime
 import random
 import re
 
+from minnie.crawler.common.MongoDB import MongodbCursor
+
 
 def reg(pattern, s):
     """
@@ -26,6 +28,8 @@ def getNowDate():
 
 if __name__ == '__main__':
     """"""
-    a = [1, 2, 3, 4]
-    index = len(a) - 1
-    print(a[random.randint(0,2)])
+    mongo = MongodbCursor('192.168.16.113')
+    cursor = mongo.get_cursor('zyfj', 'yzw_html')
+    cursor1 = mongo.get_cursor('bak', 'zyfj_yzw_html')
+    for i, d in enumerate(cursor.find()):
+        cursor1.insert(d)
