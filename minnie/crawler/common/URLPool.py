@@ -75,7 +75,7 @@ class URLPool(object):
             for temp in self.cursor.find({'isenable': '1'}):
                 if self.full():
                     break
-                self.put(temp)
+                self._queue.put(temp)
         return self._queue.empty()
 
     def save_to_db(self, params):
@@ -88,12 +88,6 @@ class URLPool(object):
 
 
 if __name__ == '__main__':
-    mongo = MongodbCursor('192.168.16.113')
-    urlpool = URLPool(mongo, 'test')
-    urlpool.put({'1': '1'})
-    urlpool.put({'1': '1'})
-    urlpool.put({'1': '1'})
-
     """
         contains
     """
