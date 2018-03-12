@@ -54,7 +54,12 @@ class yaozh(object):
         }, {
             'username': '583853240@qq.com',
             'pwd': 'sy3hz3kk'
+        }, {
+            'username': '15210506530',
+            'pwd': 'a1uj30gb'
         }]
+
+        self.pici = 0
 
     def init_url(self, url_pool):
         """
@@ -76,8 +81,11 @@ class yaozh(object):
 
     def logout(self, driver):
         # logout
-        logout = driver.find_element_by_link_text('退出')
-        logout.click()
+        try:
+            logout = driver.find_element_by_link_text('退出')
+            logout.click()
+        except NoSuchElementException as e:
+            logger.error(e)
 
     def login(self):
         """
@@ -92,6 +100,10 @@ class yaozh(object):
         temp_user = self.user[random.randint(0, len(self.user) - 1)]
         login_url = 'https://www.yaozh.com/login'
         driver = self.crawler.get_driver()
+
+        driver.get('https://db.yaozh.com/')
+        time.sleep(10)
+
         driver.get(login_url)
 
         username = driver.find_element_by_id('username')
@@ -100,15 +112,22 @@ class yaozh(object):
         password.send_keys(temp_user['pwd'])
         login_button = driver.find_element_by_id('button')
         login_button.click()
+        timeout = 2
         while True:
             try:
                 driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/a[1]')
                 break
             except NoSuchElementException as e:
                 logger.info('登陆中，请等待')
-            time.sleep(2)
+            time.sleep(timeout)
+            timeout += 2
+
+            if timeout > 10:
+                logger.error('链接超时！！')
+                return False
 
         logger.info('登陆成功')
+        return True
 
     def request_data(self):
         """
@@ -117,7 +136,11 @@ class yaozh(object):
         1.部分地市是没有数据
         :return:
         """
-        self.login()
+        self.pici += 1
+
+        while not self.login():
+            time.sleep(10)
+
         yzw_cursor = self._mongo.get_cursor('zyfj', 'yzw_html')
         yzw_cursor.ensure_index('url', unique=True)
         error_count = 0
@@ -129,10 +152,11 @@ class yaozh(object):
                 params['html'] = html
                 params['source'] = '药智网-中药方剂'
                 params['create_date'] = getNowDate()
+                params['pici'] = self.pici
                 yzw_cursor.insert(params)
             else:
                 logger.error(params['url'])
-                # self.logout(driver=self.crawler.get_driver())
+                self.logout(driver=self.crawler.get_driver())
                 self.login()
                 # error_count += 1
                 # time.sleep(10)
@@ -166,6 +190,7 @@ class yaozh(object):
                 row['url'] = data['url']
                 data_cursor.insert(row)
             else:
+                html_cursor.delete_one({'_id': data['_id']})
                 logger.error(data['url'])
                 url_cursor.update({
                     'url': data['url']
@@ -192,5 +217,9 @@ if __name__ == '__main__':
     mongo = MongodbCursor('192.168.16.113')
     urlpool = URLPool(mongo, 'yzw_zyfj')
     zyfz = yaozh(urlpool, mongo)
-    zyfz.request_data()
-    zyfz.parser()
+    while not zyfz.urlpool.empty():
+        try:
+            zyfz.request_data()
+            zyfz.parser()
+        except:
+            pass
