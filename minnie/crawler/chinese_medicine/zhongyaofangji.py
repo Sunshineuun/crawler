@@ -28,7 +28,7 @@ class zhongyaofangji(object):
         self.urlpool = URLPool(self.mongo, self.name)
         self.crawler = Crawler(urlpool=self.urlpool)
 
-        # self.init_url()
+        self.init_url()
 
     def init_url(self):
         logger.info('url初始开始！')
