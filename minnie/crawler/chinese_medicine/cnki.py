@@ -64,21 +64,42 @@ class cnki(object):
         参数：code={code}, wd={wd};code为编码，wd为方剂名称
     """
 
-    def __init__(self):
-        self.init_url(urlpool)
+    def __init__(self, ip='127.0.0.1'):
+        self.name = 'cnki_zyfj'
+        self.pici = 0
 
-    def crawler(self):
-        crawler = Crawler(urlpool=urlpool, mongo=mongo)
+        self.mongo = MongodbCursor(ip)
+        self.urlpool = URLPool(self.mongo, self.name)
+        self.crawler = Crawler(urlpool=self.urlpool, mongo=self.mongo)
 
-        zyfz_zw_html = mongo.get_cursor('zyfj', 'zyfz_zw_html')
+        self.init_url()
+
+    def init_url(self):
+        """
+        初始化urlpool
+        :param urlpool:
+        :return:
+        """
+        # 12701~12719
+        url = 'http://kb.tcm.cnki.net/TCM/TCM/Guide?node={node}&dbcode=zyff'
+        # 存储url到资源池中
+        for i in range(1, 20):
+            self.urlpool.save_to_db(params={
+                'url': url.format(node=12700 + i),
+                'type': '1'
+            })
+
+    def request_data(self):
+
+        html_cursor = self.mongo.get_cursor(self.name, 'html')
         url = 'http://kb.tcm.cnki.net/TCM/TCM/NaviItem?code={code}&wd={wd}&stype=&pageNum=1&pageSize=1000&dbcode=zyff&navikind='
         while not urlpool.empty():
             _params = urlpool.get()
             _url = _params['url']
-            html = crawler.driver_get_url(_url, check_rule=self.check_rule)
+            html = self.crawler.driver_get_url(_url, check_rule=self.check_rule)
             # 存储
-            if zyfz_zw_html.find({'url': _url}).count() <= 0:
-                zyfz_zw_html.insert({
+            if html_cursor.find({'url': _url}).count() <= 0:
+                html_cursor.save({
                     'index': reg(pattern='[0-9]+', s=_url),
                     'source': '中国知网-中药方剂',
                     'url': _url,
@@ -161,25 +182,9 @@ class cnki(object):
 
         return flag
 
-    def init_url(self, urlpool):
-        """
-        初始化urlpool
-        :param urlpool:
-        :return:
-        """
-        # 12701~12719
-        url = 'http://kb.tcm.cnki.net/TCM/TCM/Guide?node={node}&dbcode=zyff'
-        # 存储url到资源池中
-        for i in range(1, 20):
-            urlpool.put(params={
-                'url': url.format(node=12700 + i),
-                'type': '1'
-            })
-
 
 if __name__ == '__main__':
     # 中国知网-中药方剂解析
     # zgzw = ZGZW()
     # result = zgzw.parser_2()
-
     pass
