@@ -61,26 +61,33 @@ class zhongyaofangji(object):
         encodings = ['Windows-1252', 'gb2312', 'gbk']
         html_crusor = self.mongo.get_cursor(self.name, 'html')
         while not self.urlpool.empty():
-            params = self.urlpool.get()
+            data = self.urlpool.get()
             try:
                 d1 = datetime.datetime.now()
                 html_str = None
                 for encoding in encodings:
                     try:
-                        html_str = self.crawler.request_get_url(params['url']).decode(encoding)
+                        html_str = self.crawler.request_get_url(data['url']).decode(encoding)
                         break
                     except UnicodeDecodeError as error:
                         logger.error(error)
 
                 if not html_str:
+                    self.urlpool.update({
+                        'url': data['url']
+                    }, {
+                        '$set': {
+                            'isenable': '1'
+                        }
+                    })
                     continue
 
                 # soup = BeautifulSoup(html_str, 'html.parser', from_encoding='gb2312')
-                params['html'] = html_str
-                html_crusor.save(params)
+                data['html'] = html_str
+                html_crusor.save(data)
                 logger.info('耗时.....' + str((datetime.datetime.now() - d1).total_seconds()))
             except BaseException as e:
-                logger.error(params['url'])
+                logger.error(data['url'])
                 logger.error(e)
                 pass
 
