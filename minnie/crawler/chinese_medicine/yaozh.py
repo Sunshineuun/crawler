@@ -23,7 +23,7 @@ def check_rule(html):
     """
     _soup = BeautifulSoup(html, 'html.parser')
     # 可能存在tbody为空的情况，为空则该了解无效
-    tbody = _soup.find('tbody')
+    # tbody = _soup.find('tbody')
 
     tag = _soup.find('span', class_='toFindImg')
     if tag is not None and tag.text == '暂无权限':
@@ -43,11 +43,9 @@ class yaozh(object):
     数据量：34235条中药方剂
     """
 
-    def __init__(self, url_pool, mongo):
-        self.urlpool = url_pool
-        self._mongo = mongo
-        self.init_url(urlpool)
-        self.crawler = Crawler(urlpool=urlpool, mongo=mongo)
+    def __init__(self, ip='127.0.0.1'):
+        self.name = 'yaozh_zyfj'
+        self.pici = 0
         self.user = [{
             'username': 'qiushengming@aliyun.com',
             'pwd': 'qd7qrjm3'
@@ -59,15 +57,19 @@ class yaozh(object):
             'pwd': 'a1uj30gb'
         }]
 
-        self.pici = 0
+        self.mongo = MongodbCursor(ip)
+        self.urlpool = URLPool(self.mongo, self.name)
+        self.crawler = Crawler(urlpool=self.urlpool, mongo=self.mongo)
 
-    def init_url(self, url_pool):
+        self.init_url()
+
+    def init_url(self):
         """
         https://db.yaozh.com/fangji/10000001.html
         初始化到数据库中
         :return: 模板
         """
-        if url_pool.find_all_count():
+        if self.urlpool.find_all_count():
             return
         url_template = 'https://db.yaozh.com/fangji/{code}.html'
         for i in range(35000):
@@ -76,7 +78,7 @@ class yaozh(object):
                 'url': url_template.format(code=10000001 + i),
                 'type': '药智网-中药方剂'
             }
-            url_pool.save_to_db(params)
+            self.urlpool.save_to_db(params)
         logger.info('url初始结束！！！')
 
     def logout(self, driver):
@@ -141,11 +143,10 @@ class yaozh(object):
         while not self.login():
             time.sleep(10)
 
-        yzw_cursor = self._mongo.get_cursor('zyfj', 'yzw_html')
-        yzw_cursor.ensure_index('url', unique=True)
+        yzw_cursor = self.mongo.get_cursor(self.name, 'html')
         error_count = 0
-        while not urlpool.empty():
-            params = urlpool.get()
+        while not self.urlpool.empty():
+            params = self.urlpool.get()
             html = self.crawler.driver_get_url(params['url'], check_rule=check_rule)
             if html is not None and html is not False:
 
@@ -153,7 +154,7 @@ class yaozh(object):
                 params['source'] = '药智网-中药方剂'
                 params['create_date'] = getNowDate()
                 params['pici'] = self.pici
-                yzw_cursor.insert(params)
+                yzw_cursor.save(params)
             else:
                 logger.error(params['url'])
                 self.logout(driver=self.crawler.get_driver())
@@ -171,9 +172,8 @@ class yaozh(object):
         结构化
         :return:
         """
-        html_cursor = self._mongo.get_cursor('zyfj', 'yzw_html')
-        data_cursor = self._mongo.get_cursor('zyfj_data', 'yzw')
-        url_cursor = self._mongo.get_cursor('minnie', 'url_yzw_zyfj')
+        html_cursor = self.mongo.get_cursor(self.name, 'html')
+        data_cursor = self.mongo.get_cursor(self.name, 'data')
 
         for i, data in enumerate(html_cursor.find()):
             if i % 1000 == 0:
@@ -192,7 +192,7 @@ class yaozh(object):
             else:
                 html_cursor.delete_one({'_id': data['_id']})
                 logger.error(data['url'])
-                url_cursor.update({
+                self.urlpool.update({
                     'url': data['url']
                 }, {
                     '$set': {
@@ -214,9 +214,7 @@ def getcount():
 
 
 if __name__ == '__main__':
-    mongo = MongodbCursor('192.168.16.113')
-    urlpool = URLPool(mongo, 'yzw_zyfj')
-    zyfz = yaozh(urlpool, mongo)
+    zyfz = yaozh('192.168.16.113')
     while not zyfz.urlpool.empty():
         try:
             zyfz.request_data()
