@@ -50,6 +50,7 @@ class zhongyaofangji(object):
                 params['html'] = html_str
                 zhongyaofangji_html_crusor.save(params)
             except BaseException as e:
+                logger.error(params['url'])
                 logger.error(e)
                 pass
 
