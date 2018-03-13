@@ -15,9 +15,6 @@ from minnie.crawler.common.Utils import reg
 
 logger = mlogger.get_defalut_logger('cnki_TCM.log', 'cnki_TCM')
 
-mongo = MongodbCursor('192.168.16.113')
-urlpool = URLPool(mongo)
-
 
 def zgzw_recur_dic(_result, _code, _p):
     """
@@ -93,10 +90,11 @@ class cnki(object):
 
         html_cursor = self.mongo.get_cursor(self.name, 'html')
         url = 'http://kb.tcm.cnki.net/TCM/TCM/NaviItem?code={code}&wd={wd}&stype=&pageNum=1&pageSize=1000&dbcode=zyff&navikind='
-        while not urlpool.empty():
-            _params = urlpool.get()
+        while not self.urlpool.empty():
+            _params = self.urlpool.get()
             _url = _params['url']
-            html = self.crawler.driver_get_url(_url, check_rule=self.check_rule)
+            # html = self.crawler.driver_get_url(_url, check_rule=self.check_rule)
+            html = self.crawler.request_get_url(_url).decode('utf-8')
             # 存储
             if html_cursor.find({'url': _url}).count() <= 0:
                 html_cursor.save({
@@ -114,7 +112,7 @@ class cnki(object):
                     'url': url.format(code=reg(pattern='[0-9]+', s=a['href']), wd=a.text),
                     'type': '2'
                 }
-                urlpool.put(_params)
+                self.urlpool.put(_params)
 
     def parser_1(self):
         """
@@ -185,6 +183,5 @@ class cnki(object):
 
 if __name__ == '__main__':
     # 中国知网-中药方剂解析
-    # zgzw = ZGZW()
-    # result = zgzw.parser_2()
-    pass
+    zgzw = cnki('192.168.16.113')
+    zgzw.request_data()
