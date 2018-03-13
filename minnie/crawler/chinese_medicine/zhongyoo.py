@@ -10,6 +10,7 @@ from minnie.common import mlogger
 from minnie.crawler.common.Crawler import Crawler
 from minnie.crawler.common.MongoDB import MongodbCursor
 from minnie.crawler.common.URLPool import URLPool
+from minnie.crawler.common.Utils import reg
 
 logger = mlogger.get_defalut_logger('./log/zhongyoo.log', 'zhongyoo')
 
@@ -58,7 +59,7 @@ class zhongyoo(object):
         while not self.urlpool.empty():
             params = self.urlpool.get()
             try:
-                html_str = self.crawler.request_get_url(params['url']).decode('gbk')
+                html_str = self.crawler.driver_get_url(params['url'])
                 soup = BeautifulSoup(html_str, 'html.parser')
                 div_lisbox = soup.find('div', class_='listbox')
                 if div_lisbox:
@@ -75,16 +76,51 @@ class zhongyoo(object):
                         self.urlpool.put(new_params)
 
                 params['html'] = html_str
-                zhongyoo_html_crusor.insert(params)
+                zhongyoo_html_crusor.update(params, {'$set': {'url': params['url']}}, True)
             except BaseException as e:
                 logger.error(params['url'] + '出现以下错误>>>>>>>>>>>>')
                 logger.error(e)
+
+    def parser(self):
+        html_cursor = self.mongo.get_cursor('zyfj', 'zhongyoo_html')
+        data_cursor = self.mongo.get_cursor('zyfj_data', 'zhongyoo')
+        url_cursor = self.mongo.get_cursor('minnie', 'url_zhongyaoo_zyfj')
+
+        for i, data in enumerate(html_cursor.find()):
+            if i % 1000 == 0:
+                logger.info(i)
+            soup = BeautifulSoup(data['html'], 'html.parser')
+            div = soup.find('div', id='contentText')
+            if div:
+                p_tags = div.find_all('p')
+                row = {}
+                tag = ''
+                for p in p_tags:
+                    if reg('【[\u4e00-\u9fa5]+】', p.text):
+                        tag = reg('【[\u4e00-\u9fa5]+】', p.text)
+                        row[tag] = str(p.text).replace(tag, '')
+                    elif reg('[\u4e00-\u9fa5]+', tag):
+                        row[tag] += p.text
+
+                row['url'] = data['url']
+                data_cursor.save(row)
+            else:
+                html_cursor.delete_one({'_id': data['_id']})
+                logger.error(data['url'])
+                url_cursor.update({
+                    'url': data['url']
+                }, {
+                    '$set': {
+                        'isenable': '1'
+                    }
+                })
 
 
 if __name__ == '__main__':
     mongo = MongodbCursor('192.168.16.113')
     # TODO 修改URL存储的地址
-    urlpool = URLPool(mongo, 'zhongyaoo_zyfj')
+    urlpool = URLPool(mongo, 'zhongyoo_zyfj')
     zyfz = zhongyoo(urlpool, mongo)
 
     zyfz.request_date()
+    zyfz.parser()
