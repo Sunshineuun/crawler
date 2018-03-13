@@ -63,7 +63,7 @@ class zhongyaofangji(object):
                 soup = BeautifulSoup(html_str, 'lxml', from_encoding='gb2312')
                 params['html'] = str(soup.body)
                 html_crusor.save(params)
-                logger.info('对象存储耗时.....' + str((datetime.datetime.now() - d1).total_seconds()))
+                logger.info('耗时.....' + str((datetime.datetime.now() - d1).total_seconds()))
             except BaseException as e:
                 logger.error(params['url'])
                 logger.error(e)
