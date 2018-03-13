@@ -4,6 +4,8 @@
 """
 中药方剂大全：http://www.zhongyoo.com/fangji/
 """
+import chardet
+
 from bs4 import BeautifulSoup
 
 from minnie.common import mlogger
@@ -38,15 +40,10 @@ class zhongyoo(object):
         if self.url_index:
             return
 
-        self.url_index += 1
         params = {
-            '_id': self.url_index,
-            'url': 'http://www.zhongyoo.com/fangji/',
             'type': 'zhongyoo-中药方剂'
         }
-        self.urlpool.save_to_db(params)
-
-        for i in range(2, 5):
+        for i in range(1, 5):
             self.url_index = i
             params['_id'] = i
             params['url'] = 'http://www.zhongyoo.com/fangji/page_{index}.html'.format(index=i)
@@ -57,12 +54,29 @@ class zhongyoo(object):
         请求数据
         :return:
         """
-
+        encodings = ['gb2312', 'gbk', 'Windows-1252']
         html_crusor = self.mongo.get_cursor(self.name, 'html')
         while not self.urlpool.empty():
-            params = self.urlpool.get()
+            data = self.urlpool.get()
+            html_str = None
             try:
-                html_str = self.crawler.driver_get_url(params['url'])
+                for encoding in encodings:
+                    try:
+                        html_str = self.crawler.request_get_url(data['url']).decode(encoding)
+                        break
+                    except UnicodeDecodeError as error:
+                        logger.error(error)
+
+                if not html_str:
+                    self.urlpool.update({
+                        'url': data['url']
+                    }, {
+                        '$set': {
+                            'isenable': '1'
+                        }
+                    })
+                    continue
+
                 soup = BeautifulSoup(html_str, 'html.parser')
                 div_lisbox = soup.find('div', class_='listbox')
                 if div_lisbox:
@@ -78,10 +92,10 @@ class zhongyoo(object):
                         }
                         self.urlpool.put(new_params)
 
-                params['html'] = html_str
-                html_crusor.update(params, {'$set': {'url': params['url']}}, True)
+                data['html'] = html_str
+                html_crusor.update(data, {'$set': {'url': data['url']}}, True)
             except BaseException as e:
-                logger.error(params['url'] + '出现以下错误>>>>>>>>>>>>')
+                logger.error(data['url'] + '出现以下错误>>>>>>>>>>>>')
                 logger.error(e)
 
     def parser(self):
