@@ -24,7 +24,7 @@ class zhongyaofangji(object):
         self.urlpool = URLPool(self.mongo, self.name)
         self.crawler = Crawler(urlpool=self.urlpool)
 
-        self.init_url()
+        # self.init_url()
 
     def init_url(self):
         url = 'http://zhongyaofangji.com/all.html'
@@ -46,7 +46,7 @@ class zhongyaofangji(object):
         while not self.urlpool.empty():
             params = self.urlpool.get()
             try:
-                html_str = self.crawler.driver_get_url(params['url'])
+                html_str = self.crawler.request_get_url(params['url']).decode('gbk')
                 params['html'] = html_str
                 zhongyaofangji_html_crusor.save(params)
             except BaseException as e:
@@ -58,8 +58,8 @@ class zhongyaofangji(object):
 
     def test(self):
         try:
-            url = 'http://zhongyaofangji.com/all.html'
-            html = self.crawler.driver_get_url(url)
+            url = 'http://zhongyaofangji.com/a/aaiwan.html'
+            html = self.crawler.request_get_url(url).decode('gbk')
             soup = BeautifulSoup(html, 'html.parser')
             a_tags = soup.find_all('a', href=re.compile('http://zhongyaofangji.com/[a-z]/[a-z]+.html'))
             _id = 0
@@ -82,4 +82,4 @@ class zhongyaofangji(object):
 if __name__ == '__main__':
     # TODO 修改URL存储的地址
     zyfz = zhongyaofangji('192.168.16.113')
-    zyfz.request_data()
+    zyfz.test()
