@@ -70,7 +70,7 @@ class cnki(object):
 
         self.mongo = MongodbCursor(ip)
         self.urlpool = URLPool(self.mongo, self.name)
-        self.crawler = Crawler(urlpool=self.urlpool, mongo=self.mongo)
+        self.crawler = Crawler(urlpool=self.urlpool)
 
         self.init_url()
 

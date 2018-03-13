@@ -7,8 +7,6 @@ url资源池
 import datetime
 import queue
 
-from minnie.crawler.common.MongoDB import MongodbCursor
-
 
 class URLPool(object):
     """
@@ -22,9 +20,8 @@ class URLPool(object):
         :param mongo:
         :param name: url组的标识
         """
-        self.url_name = 'url_' + name
         self._queue = queue.Queue(maxsize=1000)
-        self.cursor = mongo.get_cursor('minnie', self.url_name)
+        self.cursor = mongo.get_cursor(name, 'url')
         self.find_by_db()
         print('urlpool init!')
 
@@ -85,6 +82,19 @@ class URLPool(object):
 
     def find_all_count(self):
         return self.cursor.find().count()
+
+    def update(self, query, update):
+        self.cursor.update(query, update)
+
+    def update_success_url(self, url):
+        if self.cursor.find({'url': url}).count() > 0:
+            self.cursor.update({
+                'url': url
+            }, {
+                '$set': {
+                    'isenable': '0'
+                }
+            })
 
 
 if __name__ == '__main__':

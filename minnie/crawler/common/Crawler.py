@@ -48,9 +48,8 @@ class Crawler(object):
     2.driver怎么判断请求成
     """
 
-    def __init__(self, urlpool, mongo):
+    def __init__(self, urlpool):
         self.urlpool = urlpool
-        self.cursor = mongo.get_cursor('minnie', urlpool.url_name)
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:35.0) Gecko/20100101 Firefox/35.0',
         }
@@ -98,7 +97,7 @@ class Crawler(object):
                 if index < 0:
                     return False
         result = self.driver.page_source
-        self.update_success_url(url)
+        self.urlpool.update_success_url(url)
         return result
 
     def request_get_url(self, url, params=None):
@@ -128,19 +127,8 @@ class Crawler(object):
         if response is None:
             return
         else:
-            self.update_success_url(url)
-            # .decode('UTF-8')
+            self.urlpool.update_success_url(url)
             return response.read()
-
-    def update_success_url(self, url):
-        if self.cursor.find({'url': url}).count() > 0:
-            self.cursor.update({
-                'url': url
-            }, {
-                '$set': {
-                    'isenable': '0'
-                }
-            })
 
     def get_driver(self):
         return self.driver
