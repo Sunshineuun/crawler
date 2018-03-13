@@ -3,13 +3,15 @@
 # qiushengming-minnie
 import datetime
 import re
+
+import chardet
 from bs4 import BeautifulSoup
 
 from minnie.common import mlogger
 from minnie.crawler.common.Crawler import Crawler
 from minnie.crawler.common.MongoDB import MongodbCursor
 from minnie.crawler.common.URLPool import URLPool
-from minnie.crawler.common.Utils import getNowDate, reg
+from minnie.crawler.common.Utils import reg
 
 logger = mlogger.get_defalut_logger('./log/zhongyoo.log', 'zhongyoo')
 
@@ -33,9 +35,11 @@ class zhongyaofangji(object):
         url = 'http://zhongyaofangji.com/all.html'
         logger.info('请求开始......')
         html = self.crawler.request_get_url(url)
+        # logger.info('获取编码......')
+        # from_encoding = chardet.detect(html)
 
         logger.info('对象转换开始......')
-        soup = BeautifulSoup(html, 'lxml', from_encoding='gb2312')
+        soup = BeautifulSoup(html, 'html.parser', from_encoding='gb2312')
         print(soup.original_encoding)
 
         logger.info('获取标签开始......')
@@ -54,14 +58,25 @@ class zhongyaofangji(object):
         logger.info('url初始结束！')
 
     def request_data(self):
+        encodings = ['Windows-1252', 'gb2312', 'gbk']
         html_crusor = self.mongo.get_cursor(self.name, 'html')
         while not self.urlpool.empty():
             params = self.urlpool.get()
             try:
                 d1 = datetime.datetime.now()
-                html_str = self.crawler.request_get_url(params['url'])
-                soup = BeautifulSoup(html_str, 'lxml', from_encoding='gb2312')
-                params['html'] = str(soup.body)
+                html_str = None
+                for encoding in encodings:
+                    try:
+                        html_str = self.crawler.request_get_url(params['url']).decode(encoding)
+                        break
+                    except UnicodeDecodeError as error:
+                        logger.error(error)
+
+                if not html_str:
+                    continue
+
+                # soup = BeautifulSoup(html_str, 'html.parser', from_encoding='gb2312')
+                params['html'] = html_str
                 html_crusor.save(params)
                 logger.info('耗时.....' + str((datetime.datetime.now() - d1).total_seconds()))
             except BaseException as e:
