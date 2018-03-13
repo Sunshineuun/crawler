@@ -16,13 +16,16 @@ logger = mlogger.get_defalut_logger('./log/zhongyoo.log', 'zhongyoo')
 
 
 class zhongyoo(object):
-    def __init__(self, _urlpool, _mongo):
+    def __init__(self, ip='127.0.0.1'):
         """
         """
-        self.urlpool = _urlpool
-        self.mongo = _mongo
-        self.crawler = Crawler(urlpool=_urlpool, mongo=_mongo)
+        self.name = 'zhongyoo'
+        self.pici = 1
         self.url_index = 0  # 插入文档中的ID设置
+
+        self.mongo = MongodbCursor(ip)
+        self.urlpool = URLPool(self.mongo, self.name)
+        self.crawler = Crawler(urlpool=self.urlpool, mongo=self.mongo)
 
         self.init_url()
 
@@ -55,7 +58,7 @@ class zhongyoo(object):
         :return:
         """
 
-        zhongyoo_html_crusor = self.mongo.get_cursor('zyfj', 'zhongyoo_html')
+        html_crusor = self.mongo.get_cursor(self.name, 'html')
         while not self.urlpool.empty():
             params = self.urlpool.get()
             try:
@@ -76,15 +79,14 @@ class zhongyoo(object):
                         self.urlpool.put(new_params)
 
                 params['html'] = html_str
-                zhongyoo_html_crusor.update(params, {'$set': {'url': params['url']}}, True)
+                html_crusor.update(params, {'$set': {'url': params['url']}}, True)
             except BaseException as e:
                 logger.error(params['url'] + '出现以下错误>>>>>>>>>>>>')
                 logger.error(e)
 
     def parser(self):
-        html_cursor = self.mongo.get_cursor('zyfj', 'zhongyoo_html')
-        data_cursor = self.mongo.get_cursor('zyfj_data', 'zhongyoo')
-        url_cursor = self.mongo.get_cursor('minnie', 'url_zhongyaoo_zyfj')
+        html_cursor = self.mongo.get_cursor(self.name, 'html')
+        data_cursor = self.mongo.get_cursor(self.name, 'data')
 
         for i, data in enumerate(html_cursor.find()):
             if i % 1000 == 0:
@@ -107,7 +109,7 @@ class zhongyoo(object):
             else:
                 html_cursor.delete_one({'_id': data['_id']})
                 logger.error(data['url'])
-                url_cursor.update({
+                self.urlpool.update({
                     'url': data['url']
                 }, {
                     '$set': {
@@ -117,10 +119,7 @@ class zhongyoo(object):
 
 
 if __name__ == '__main__':
-    mongo = MongodbCursor('192.168.16.113')
-    # TODO 修改URL存储的地址
-    urlpool = URLPool(mongo, 'zhongyoo_zyfj')
-    zyfz = zhongyoo(urlpool, mongo)
+    zyfz = zhongyoo('192.168.16.113')
 
     zyfz.request_date()
     zyfz.parser()
