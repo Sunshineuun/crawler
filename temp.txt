@@ -1,5 +1,0 @@
-If a document does not have a value for the indexed field in a unique index, the index will store a null value for this document. Because of the unique constraint, MongoDB will only permit one document that lacks the indexed field. If there is more than one document without a value for the indexed field or is missing the indexed field, the index build will fail with a duplicate key error.
-
-You can combine the unique constraint with the sparse index to filter these null values from the unique index and avoid the error.
-
-Sparse indexes only contain entries for documents that have the indexed field, even if the index field contains a null value.
