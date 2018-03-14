@@ -31,6 +31,9 @@ class zhongyaofangji(object):
         self.init_url()
 
     def init_url(self):
+        if self.urlpool.find_all_count():
+            logger.info('已初始化....重新初始化请清空数据库')
+            return
         logger.info('url初始开始！')
         url = 'http://zhongyaofangji.com/all.html'
         logger.info('请求开始......')
@@ -58,16 +61,18 @@ class zhongyaofangji(object):
         logger.info('url初始结束！')
 
     def request_data(self):
-        encodings = ['Windows-1252', 'gb2312', 'gbk']
+        encodings = ['GB18030', 'Windows-1252', 'gb2312', 'gbk']
         html_crusor = self.mongo.get_cursor(self.name, 'html')
         while not self.urlpool.empty():
             data = self.urlpool.get()
             try:
                 d1 = datetime.datetime.now()
                 html_str = None
+                html_b = None
                 for encoding in encodings:
                     try:
-                        html_str = self.crawler.request_get_url(data['url']).decode(encoding)
+                        html_b = self.crawler.request_get_url(data['url'])
+                        html_str = html_b.decode(encoding)
                         break
                     except UnicodeDecodeError as error:
                         logger.error(error)
