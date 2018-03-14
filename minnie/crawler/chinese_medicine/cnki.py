@@ -56,6 +56,7 @@ class cnki(object):
     """
     中国知网，中药方剂信息爬取
     方剂目录地址：http://kb.tcm.cnki.net/TCM/TCM/Guide?node=12719&dbcode=zyff
+            http://kb.tcm.cnki.net/TCM/TCM/GuideMore?node=12719&dbcode=zyff&kind=
         参数：node={node}
     方剂详细列表地址：http://kb.tcm.cnki.net/TCM/TCM/NaviItem?code=127010101&wd=%25E5%25B0%258F%25E9%259D%2592%25E9%25BE%2599%25E6%25B1%25A4&stype=&pageNum=1&pageSize=1000&dbcode=zyff&navikind=
         参数：code={code}, wd={wd};code为编码，wd为方剂名称
@@ -79,40 +80,89 @@ class cnki(object):
         """
         # 12701~12719
         url = 'http://kb.tcm.cnki.net/TCM/TCM/Guide?node={node}&dbcode=zyff'
+        url2 = 'http://kb.tcm.cnki.net/TCM/TCM/GuideMore?node={node}&dbcode=zyff&kind='
         # 存储url到资源池中
         for i in range(1, 20):
             self.urlpool.save_to_db(params={
                 'url': url.format(node=12700 + i),
+                'url2': url2.format(node=12700 + i),
                 'type': '1'
+            })
+
+    def save_data(self, html_cursor, url, html):
+        if html_cursor.find({'url': url}).count() <= 0:
+            html_cursor.save({
+                'index': reg(pattern='[0-9]+', s=url),
+                'source': '中国知网-中药方剂',
+                'url': url,
+                'html': html,
+                'pici': '1'
             })
 
     def request_data(self):
 
         html_cursor = self.mongo.get_cursor(self.name, 'html')
         url = 'http://kb.tcm.cnki.net/TCM/TCM/NaviItem?code={code}&wd={wd}&stype=&pageNum=1&pageSize=1000&dbcode=zyff&navikind='
-        while not self.urlpool.empty():
-            _params = self.urlpool.get()
-            _url = _params['url']
-            # html = self.crawler.driver_get_url(_url, check_rule=self.check_rule)
-            html = self.crawler.request_get_url(_url).decode('utf-8')
-            # 存储
-            if html_cursor.find({'url': _url}).count() <= 0:
-                html_cursor.save({
-                    'index': reg(pattern='[0-9]+', s=_url),
-                    'source': '中国知网-中药方剂',
-                    'url': _url,
-                    'html': html,
-                    'pici': '1'
-                })
 
-            _soup = BeautifulSoup(html, 'html.parser')
-            tag_a = _soup.find_all('a', href=re.compile('navi\?node=[0-9]{7,9}'))
-            for a in tag_a:
+        logger.info('第一阶段开始......')
+        while not self.urlpool.empty():
+            # 参数获取
+            _params = self.urlpool.get()
+
+            if 'url2' not in _params:
+                self.urlpool.put(_params)
+                break
+
+            _url = _params['url']
+            url2 = _params['url2']
+
+            # 请求获取数据
+            # html = self.crawler.driver_get_url(_url, check_rule=self.check_rule)
+            html1 = self.crawler.request_get_url(_url).decode('utf-8')
+            html2 = self.crawler.request_get_url(url2).decode('utf-8')
+
+            # 校验请求是否有效，无效更新链接地址
+            if not (html1 and html2):
+                self.urlpool.update({
+                    'url': _params['url']
+                }, {
+                    '$set': {
+                        'isenable': '1'
+                    }
+                })
+                continue
+
+            # 拼接请求结果，特殊化处理，该网站能容分两个请求得到
+            s1 = '<div id="moreContent" class="moreIntro">'
+            point = html1.index(s1) + len(s1)
+            html = html1[0:point] + html2 + html1[point:]
+
+            # 解析
+            soup = BeautifulSoup(html, 'html.parser')
+            a_tags = soup.find_all('a', href=re.compile('navi\?node=[0-9]{7,9}'))
+
+            # 获取新的地址进行存储
+            for a in a_tags:
                 _params = {
                     'url': url.format(code=reg(pattern='[0-9]+', s=a['href']), wd=a.text),
                     'type': '2'
                 }
                 self.urlpool.put(_params)
+
+            # 存储HTML
+            self.save_data(html_cursor, _url, html)
+
+        logger.info('第二阶段开始......')
+        while not self.urlpool.empty():
+            # 参数获取
+            _params = self.urlpool.get()
+            _url = _params['url']
+
+            # 请求获取数据
+            html = self.crawler.request_get_url(_url).decode('utf-8')
+
+            # 存储数据
+            self.save_data(html_cursor, _url, html)
 
     def parser_1(self):
         """
@@ -120,7 +170,7 @@ class cnki(object):
         字典形式
         :return:
         """
-        zyfz_zw_html_cursor = mongo.get_cursor('zyfj', 'zyfz_zw_html')
+        zyfz_zw_html_cursor = self.mongo.get_cursor('zyfj', 'zyfz_zw_html')
         zyfz_zw_html_result = zyfz_zw_html_cursor.find({
             'url': {
                 '$regex': '127[0-9]{2}&'
