@@ -112,8 +112,6 @@ class Crawler(object):
         if params:
             data = parse.urlencode(params).encode('utf-8')
 
-        # 检测url中是否包含中文，包含中文的话需要解码
-
         r = request.Request(url=self.format_url(url), headers=self.headers, data=data)
         response = None
 
@@ -138,6 +136,8 @@ class Crawler(object):
 
     def format_url(self, url):
         """
+        检测url中是否包含中文，包含中文的话需要编码解码
+        将中文转换为二进制
         :param url:
         :return:
         """
