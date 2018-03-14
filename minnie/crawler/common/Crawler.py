@@ -100,13 +100,17 @@ class Crawler(object):
         self.urlpool.update_success_url(url)
         return result
 
-    def request_get_url(self, url, params=None):
+    def request_get_url(self, url, params=None, header=None):
         """
         request方式请求\n
+        :param header: 字典格式的header头\n
         :param url: 字符串格式\n
         :param params: 字典格式\n
         :return: 长文本，或者也可以返回response，建议长文本吧
         """
+        for key, value in header.items():
+            self.headers[key] = value
+
         data = None
 
         if params:
