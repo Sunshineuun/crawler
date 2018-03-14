@@ -31,10 +31,10 @@ def getHttpStatus(browser):
                 response = _json['message']['params']['response']
 
                 if response['url'] == browser.current_url \
-                    and response['status'] == 200:
+                        and response['status'] == 200:
                     return True
-                # if response['status'] is not '200':
-                #     return False
+                    # if response['status'] is not '200':
+                    #     return False
         except:
             # 说明没有response
             pass
@@ -108,10 +108,13 @@ class Crawler(object):
         :return: 长文本，或者也可以返回response，建议长文本吧
         """
         data = None
+
         if params:
             data = parse.urlencode(params).encode('utf-8')
 
-        r = request.Request(url=url, headers=self.headers, data=data)
+        # 检测url中是否包含中文，包含中文的话需要解码
+
+        r = request.Request(url=self.format_url(url), headers=self.headers, data=data)
         response = None
 
         try:
@@ -132,3 +135,19 @@ class Crawler(object):
 
     def get_driver(self):
         return self.driver
+
+    def format_url(self, url):
+        """
+        :param url:
+        :return:
+        """
+        index1 = url.index('?')
+        domain = url[0: index1]
+        raw_params = url[index1 + 1:]
+
+        format_params = {}
+        for p in raw_params.split('&'):
+            temp = p.split('=')
+            format_params[temp[0]] = temp[1]
+
+        return domain + '?' + str(parse.urlencode(format_params).encode('utf-8').decode('utf-8'))
