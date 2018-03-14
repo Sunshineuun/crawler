@@ -48,8 +48,7 @@ class Crawler(object):
     2.driver怎么判断请求成
     """
 
-    def __init__(self, urlpool):
-        self.urlpool = urlpool
+    def __init__(self):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:35.0) Gecko/20100101 Firefox/35.0',
         }
@@ -97,17 +96,18 @@ class Crawler(object):
                 if index < 0:
                     return False
         result = self.driver.page_source
-        self.urlpool.update_success_url(url)
         return result
 
     def request_get_url(self, url, params=None, header=None):
         """
         request方式请求\n
-        :param header: 字典格式的header头\n
+        :param header: 字典格式的header头 \n
         :param url: 字符串格式\n
         :param params: 字典格式\n
         :return: 长文本，或者也可以返回response，建议长文本吧
         """
+        if header is None:
+            header = {}
         for key, value in header.items():
             self.headers[key] = value
 
@@ -132,7 +132,6 @@ class Crawler(object):
         if response is None:
             return
         else:
-            self.urlpool.update_success_url(url)
             return response.read()
 
     def get_driver(self):

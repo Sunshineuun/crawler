@@ -68,7 +68,7 @@ class cnki(object):
 
         self.mongo = MongodbCursor(ip)
         self.urlpool = URLPool(self.mongo, self.name)
-        self.crawler = Crawler(urlpool=self.urlpool)
+        self.crawler = Crawler()
 
         self.init_url()
 
@@ -152,6 +152,8 @@ class cnki(object):
             # 存储HTML
             self.save_data(html_cursor, _url, html)
 
+            self.urlpool.update_success_url(_params['url'])
+
         logger.info('第二阶段开始......')
         while not self.urlpool.empty():
             # 参数获取
@@ -163,6 +165,7 @@ class cnki(object):
 
             # 存储数据
             self.save_data(html_cursor, _url, html)
+            self.urlpool.update_success_url(_params['url'])
 
     def parser_1(self):
         """

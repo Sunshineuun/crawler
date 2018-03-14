@@ -26,10 +26,14 @@ def getNowDate():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def count(name, ip='192.168.16.113'):
+    mongo = MongodbCursor(ip)
+    html_cursor = mongo.get_cursor(name, 'html')
+    url_cursor = mongo.get_cursor(name, 'url')
+
+    print('html:', html_cursor.find().count())
+    print('url:', url_cursor.find().count())
+
+
 if __name__ == '__main__':
-    """"""
-    mongo = MongodbCursor('192.168.16.113')
-    cursor = mongo.get_cursor('zyfj', 'yzw_html')
-    cursor1 = mongo.get_cursor('bak', 'zyfj_yzw_html')
-    for i, d in enumerate(cursor.find()):
-        cursor1.insert(d)
+    count('yaozh_zyfj')

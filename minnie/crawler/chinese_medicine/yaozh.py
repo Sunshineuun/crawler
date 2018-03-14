@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 # qiushengming-minnie
+import datetime
 import random
 import time
 
@@ -13,27 +14,33 @@ from minnie.crawler.common.MongoDB import MongodbCursor
 from minnie.crawler.common.URLPool import URLPool
 from minnie.crawler.common.Utils import getNowDate
 
-logger = mlogger.get_defalut_logger('YAZHI_ZYFZ.log', 'YAZHI_ZYFZ')
+logger = mlogger.get_defalut_logger('yaozhi.log', 'yaozhi')
 
 
 def check_rule(html):
     """
     规则
-    :return:
+    :return: 校验不同返回True，检验通过返回False
     """
+    if html is None and html is False:
+        return 1, 'html为空'
+
     _soup = BeautifulSoup(html, 'html.parser')
+
     # 可能存在tbody为空的情况，为空则该了解无效
-    # tbody = _soup.find('tbody')
+    tbody = _soup.find('tbody')
+    if tbody is None:
+        return 1, 'tbody为空'
 
     tag = _soup.find('span', class_='toFindImg')
-    if tag is not None and tag.text == '暂无权限':
-        return True
-    elif tag is None:
-        return False
-    elif tag is not None and tag.text is not None:
-        return False
+    if tag is None:
+        return 1, 'sapn为空，单元格中无值'
+    elif tag.text == '暂无权限':
+        return 2, '暂无权限'
+    elif tag.text != '暂无权限':
+        return 0, '成功'
     else:
-        return False
+        return 3, '未知情况'
 
 
 class yaozh(object):
@@ -56,10 +63,11 @@ class yaozh(object):
             'username': '15210506530',
             'pwd': 'a1uj30gb'
         }]
+        self.cookie = ''
 
         self.mongo = MongodbCursor(ip)
         self.urlpool = URLPool(self.mongo, self.name)
-        self.crawler = Crawler(urlpool=self.urlpool)
+        self.crawler = Crawler()
 
         self.init_url()
 
@@ -129,6 +137,11 @@ class yaozh(object):
                 return False
 
         logger.info('登陆成功')
+
+        # 获取cookie
+        for dic in self.crawler.get_driver().get_cookies():
+            self.cookie += dic['name'] + '=' + dic['value'] + ';'
+
         return True
 
     def request_data(self):
@@ -140,31 +153,45 @@ class yaozh(object):
         """
         self.pici += 1
 
+        # 登陆是否成功
         while not self.login():
             time.sleep(10)
 
-        yzw_cursor = self.mongo.get_cursor(self.name, 'html')
+        html_cursor = self.mongo.get_cursor(self.name, 'html')
         error_count = 0
         while not self.urlpool.empty():
-            params = self.urlpool.get()
-            html = self.crawler.driver_get_url(params['url'], check_rule=check_rule)
-            if html is not None and html is not False:
 
+            d1 = datetime.datetime.now()
+
+            params = self.urlpool.get()
+            # html = self.crawler.driver_get_url(params['url'], check_rule=check_rule)
+            html = self.crawler.request_get_url(params['url'], header={'Cookie': self.cookie}).decode('utf-8')
+
+            stat, msg = check_rule(html)
+            if stat == 0:
                 params['html'] = html
                 params['source'] = '药智网-中药方剂'
                 params['create_date'] = getNowDate()
                 params['pici'] = self.pici
-                yzw_cursor.save(params)
-            else:
+                html_cursor.save(params)
+                self.urlpool.update_success_url(params['url'])
+            elif stat == 1:
+                params['isenable'] = msg
+                params.pop('_id')
+                self.urlpool.update({'_id': params['_id']}, params)
+            elif stat == 2:
                 logger.error(params['url'])
                 self.logout(driver=self.crawler.get_driver())
                 self.login()
+            elif stat == 3:
+                logger.info(params)
                 # error_count += 1
                 # time.sleep(10)
 
             if error_count > 10:
                 time.sleep(10)
                 # 发送邮件进行通知
+            logger.info('耗时.....' + str((datetime.datetime.now() - d1).total_seconds()))
 
     def parser(self):
         """
@@ -200,21 +227,19 @@ class yaozh(object):
                     }
                 })
 
-
-def getcount():
-    """
-    待处理
-    :return:
-    """
-    mongo = MongodbCursor('192.168.16.113')
-    cursor = mongo.get_cursor('minnie', 'url_yzw_zyfj')
-    print(
-        cursor.find({'isenable': '1'}).count()
-    )
+    def test(self):
+        url = 'https://db.yaozh.com/fangji/10014257.html'
+        cookie = ''
+        for dic in self.crawler.get_driver().get_cookies():
+            cookie += dic['name'] + '=' + dic['value'] + ';'
+        html = self.crawler.request_get_url(url, header={'Cookie': cookie})
+        print(html)
+        pass
 
 
 if __name__ == '__main__':
     zyfz = yaozh('192.168.16.113')
+    # zyfz.count()
     while not zyfz.urlpool.empty():
         try:
             zyfz.request_data()

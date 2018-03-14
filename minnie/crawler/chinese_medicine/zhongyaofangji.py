@@ -26,7 +26,7 @@ class zhongyaofangji(object):
 
         self.mongo = MongodbCursor(ip)
         self.urlpool = URLPool(self.mongo, self.name)
-        self.crawler = Crawler(urlpool=self.urlpool)
+        self.crawler = Crawler()
 
         self.init_url()
 
@@ -78,18 +78,12 @@ class zhongyaofangji(object):
                         logger.error(error)
 
                 if not html_str:
-                    self.urlpool.update({
-                        'url': data['url']
-                    }, {
-                        '$set': {
-                            'isenable': '1'
-                        }
-                    })
                     continue
 
                 # soup = BeautifulSoup(html_str, 'html.parser', from_encoding='gb2312')
                 data['html'] = html_str
                 html_crusor.save(data)
+                self.urlpool.update_success_url(data['url'])
                 logger.info('耗时.....' + str((datetime.datetime.now() - d1).total_seconds()))
             except BaseException as e:
                 logger.error(data['url'])

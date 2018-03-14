@@ -27,7 +27,7 @@ class zhongyoo(object):
 
         self.mongo = MongodbCursor(ip)
         self.urlpool = URLPool(self.mongo, self.name)
-        self.crawler = Crawler(urlpool=self.urlpool)
+        self.crawler = Crawler()
 
         self.init_url()
 
@@ -93,7 +93,8 @@ class zhongyoo(object):
                         self.urlpool.put(new_params)
 
                 data['html'] = html_str
-                html_crusor.update(data, {'$set': {'url': data['url']}}, True)
+                html_crusor.save(data)
+                self.urlpool.update_success_url(data['url'])
             except BaseException as e:
                 logger.error(data['url'] + '出现以下错误>>>>>>>>>>>>')
                 logger.error(e)
