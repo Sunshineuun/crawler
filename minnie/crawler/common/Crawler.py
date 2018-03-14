@@ -141,6 +141,9 @@ class Crawler(object):
         :param url:
         :return:
         """
+        if not url.__contains__('?'):
+            return url
+
         index1 = url.index('?')
         domain = url[0: index1]
         raw_params = url[index1 + 1:]
