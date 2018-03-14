@@ -6,6 +6,8 @@
 """
 import datetime
 import json
+import traceback
+from http.client import RemoteDisconnected
 from urllib import request, error, parse
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -74,11 +76,10 @@ class Crawler(object):
         self.opener = request.build_opener(request.HTTPHandler)
         request.install_opener(opener=self.opener)
 
-    def driver_get_url(self, url, check_rule=None):
+    def driver_get_url(self, url):
         """
         selenium方式请求，浏览器\n
         请求成功更新url；存储响应的html界面
-        :param check_rule:
         :param url: 字符串类型\n
         :return: 长文本
         """
@@ -87,14 +88,6 @@ class Crawler(object):
         # if not getHttpStatus(self.driver):
         #     return False
 
-        index = 4
-        # 规则存在执行校验规则
-        if check_rule:
-            # 校验规则出现三次错误则退出，并且返回False
-            while check_rule(self.driver.page_source):
-                index -= 1
-                if index < 0:
-                    return False
         result = self.driver.page_source
         return result
 
@@ -121,18 +114,13 @@ class Crawler(object):
 
         try:
             response = self.opener.open(r)
-        except error.HTTPError as e:
-            logger.error(u'HTTPError，错误代码{code}'.format(code=e.code))
-            logger.error(e.read().decode('utf-8'))
-        except error.URLError as e:
-            logger.error(u'URLError，错误提示{reason}'.format(reason=e.reason))
-        except ConnectionResetError as e:
-            logger.error(e)
-
-        if response is None:
-            return
-        else:
-            return response.read()
+        except BaseException as e:
+            logger.error(traceback.format_exc())
+        finally:
+            if response is None:
+                return None
+            else:
+                return response.read()
 
     def get_driver(self):
         return self.driver

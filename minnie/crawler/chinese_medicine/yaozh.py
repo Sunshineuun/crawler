@@ -4,6 +4,7 @@
 import datetime
 import random
 import time
+import traceback
 
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import NoSuchElementException
@@ -22,6 +23,9 @@ def check_rule(html):
     规则
     :return: 校验不同返回True，检验通过返回False
     """
+    if html and html.__contains__('CryptoJS'):
+        return 4, '被加密了，刷新'
+
     if html is None and html is False:
         return 1, 'html为空'
 
@@ -69,6 +73,10 @@ class yaozh(object):
         self.urlpool = URLPool(self.mongo, self.name)
         self.crawler = Crawler()
 
+        self.html_cursor = self.mongo.get_cursor(self.name, 'html')
+        self.time_cursor = self.mongo.get_cursor(self.name, 'time')
+        self.data_cursor = self.mongo.get_cursor(self.name, 'data')
+
         self.init_url()
 
     def init_url(self):
@@ -91,11 +99,7 @@ class yaozh(object):
 
     def logout(self, driver):
         # logout
-        try:
-            logout = driver.find_element_by_link_text('退出')
-            logout.click()
-        except NoSuchElementException as e:
-            logger.error(e)
+        driver.get('https://www.yaozh.com/login/logout/?backurl=http%3A%2F%2Fwww.yaozh.com%2F')
 
     def login(self):
         """
@@ -111,6 +115,8 @@ class yaozh(object):
         login_url = 'https://www.yaozh.com/login'
         driver = self.crawler.get_driver()
 
+        self.logout(driver)
+
         driver.get('https://db.yaozh.com/')
         time.sleep(10)
 
@@ -123,6 +129,7 @@ class yaozh(object):
         login_button = driver.find_element_by_id('button')
         login_button.click()
         timeout = 2
+
         while True:
             try:
                 driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/a[1]')
@@ -144,6 +151,29 @@ class yaozh(object):
 
         return True
 
+    def check_and_save(self, params, html):
+        stat, msg = check_rule(html)
+        if stat == 0:
+            params['html'] = html
+            params['source'] = '药智网-中药方剂'
+            params['create_date'] = getNowDate()
+            params['pici'] = self.pici
+            self.html_cursor.save(params)
+            self.urlpool.update_success_url(params['url'])
+        elif stat == 1:
+            params['isenable'] = msg
+            _id = params['_id']
+            params.pop('_id')
+            self.urlpool.update({'_id': _id}, params)
+        elif stat == 2:
+            logger.error(params['url'])
+            self.logout(driver=self.crawler.get_driver())
+            self.login()
+        elif stat == 3:
+            logger.info(params)
+        elif stat == 4:
+            self.refresh_cookie(params)
+
     def request_data(self):
         """
         数据爬取模块
@@ -157,41 +187,47 @@ class yaozh(object):
         while not self.login():
             time.sleep(10)
 
-        html_cursor = self.mongo.get_cursor(self.name, 'html')
-        error_count = 0
         while not self.urlpool.empty():
-
-            d1 = datetime.datetime.now()
-
             params = self.urlpool.get()
-            # html = self.crawler.driver_get_url(params['url'], check_rule=check_rule)
-            html = self.crawler.request_get_url(params['url'], header={'Cookie': self.cookie}).decode('utf-8')
+            time_consum = []
+            html = None
+            _id = params['_id']
+            d1 = datetime.datetime.now()
+            html_b = self.crawler.request_get_url(params['url'], header={'Cookie': self.cookie})
 
-            stat, msg = check_rule(html)
-            if stat == 0:
-                params['html'] = html
-                params['source'] = '药智网-中药方剂'
-                params['create_date'] = getNowDate()
-                params['pici'] = self.pici
-                html_cursor.save(params)
-                self.urlpool.update_success_url(params['url'])
-            elif stat == 1:
-                params['isenable'] = msg
-                params.pop('_id')
-                self.urlpool.update({'_id': params['_id']}, params)
-            elif stat == 2:
-                logger.error(params['url'])
-                self.logout(driver=self.crawler.get_driver())
-                self.login()
-            elif stat == 3:
-                logger.info(params)
-                # error_count += 1
-                # time.sleep(10)
+            if not html_b:
+                self.refresh_cookie(params)
+                continue
+            elif html_b:
+                html = html_b.decode('utf-8')
 
-            if error_count > 10:
-                time.sleep(10)
-                # 发送邮件进行通知
-            logger.info('耗时.....' + str((datetime.datetime.now() - d1).total_seconds()))
+            if html is None:
+                continue
+
+            d2 = datetime.datetime.now()
+            time_consum.append((d2 - d1).total_seconds())
+
+            self.check_and_save(params, html)
+
+            d3 = datetime.datetime.now()
+            time_consum.append((d3 - d2).total_seconds())
+            logger.info('响应耗时，解析耗时.....' + str(time_consum))
+
+            self.time_cursor.save({
+                '_id': _id,
+                'url': params['url'],
+                'time': time_consum
+            })
+
+    def driver_data(self, params):
+        html = self.crawler.driver_get_url(params['url'])
+        self.check_and_save(params, html)
+
+    def refresh_cookie(self, params):
+        self.driver_data(params)
+        # 获取cookie
+        for dic in self.crawler.get_driver().get_cookies():
+            self.cookie += dic['name'] + '=' + dic['value'] + ';'
 
     def parser(self):
         """
@@ -199,10 +235,7 @@ class yaozh(object):
         结构化
         :return:
         """
-        html_cursor = self.mongo.get_cursor(self.name, 'html')
-        data_cursor = self.mongo.get_cursor(self.name, 'data')
-
-        for i, data in enumerate(html_cursor.find()):
+        for i, data in enumerate(self.html_cursor.find()):
             if i % 1000 == 0:
                 logger.info(i)
             soup = BeautifulSoup(data['html'], 'html.parser')
@@ -215,9 +248,9 @@ class yaozh(object):
 
                 row['_id'] = data['_id']
                 row['url'] = data['url']
-                data_cursor.insert(row)
+                self.data_cursor.insert(row)
             else:
-                html_cursor.delete_one({'_id': data['_id']})
+                self.html_cursor.delete_one({'_id': data['_id']})
                 logger.error(data['url'])
                 self.urlpool.update({
                     'url': data['url']
@@ -238,11 +271,10 @@ class yaozh(object):
 
 
 if __name__ == '__main__':
-    zyfz = yaozh('192.168.16.113')
-    # zyfz.count()
+    zyfz = yaozh('127.0.0.1')
     while not zyfz.urlpool.empty():
         try:
             zyfz.request_data()
-            zyfz.parser()
-        except:
-            pass
+        except BaseException as e:
+            logger.error(traceback.format_exc())
+    # zyfz.parser()
