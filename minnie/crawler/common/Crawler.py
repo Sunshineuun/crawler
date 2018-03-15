@@ -7,12 +7,15 @@
 import datetime
 import json
 import traceback
-from http.client import RemoteDisconnected
+from http.client import RemoteDisconnected, IncompleteRead
 from urllib import request, error, parse
+
+import pymongo
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from minnie.common import mlogger
+from minnie.crawler.common.Utils import getNowDate
 
 logger = mlogger.get_defalut_logger('crawler.log', 'crawler')
 
@@ -51,6 +54,8 @@ class Crawler(object):
     """
 
     def __init__(self):
+        self.mongo = pymongo.MongoClient('192.168.16.138', 27017)
+        self.error_cursor = self.mongo['minnie']['crawler_error']
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:35.0) Gecko/20100101 Firefox/35.0',
         }
@@ -110,17 +115,24 @@ class Crawler(object):
             data = parse.urlencode(params).encode('utf-8')
 
         r = request.Request(url=self.format_url(url), headers=self.headers, data=data)
-        response = None
 
         try:
             response = self.opener.open(r)
-        except BaseException as e:
-            logger.error(traceback.format_exc())
-        finally:
-            if response is None:
-                return None
-            else:
-                return response.read()
+            result = response.read()
+            return result
+        # except error.HTTPError:
+        #     return 'Minnie#400'
+        # except IncompleteRead:
+        #     logger.error(traceback.format_exc())
+        # except RemoteDisconnected:
+        #     关闭远程连接
+        #     logger.error(traceback.format_exc())
+        except BaseException:
+            params['error'] = traceback.format_exc()
+            params['date'] = getNowDate()
+            self.error_cursor(params)
+
+        return None
 
     def get_driver(self):
         return self.driver
