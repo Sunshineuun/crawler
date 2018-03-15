@@ -53,6 +53,10 @@ class yaozh(object):
     耗时：约14h
     数据量：34235条中药方剂
     """
+    # TODO
+    """
+    1.请求频繁了会出现400的情况，需要进行排查
+    """
 
     def __init__(self, ip='127.0.0.1'):
         self.name = 'yaozh_zyfj'
@@ -67,7 +71,6 @@ class yaozh(object):
             'username': '15210506530',
             'pwd': 'a1uj30gb'
         }]
-        self.cookie = ''
 
         self.mongo = MongodbCursor(ip)
         self.urlpool = URLPool(self.mongo, self.name)
@@ -134,7 +137,7 @@ class yaozh(object):
             try:
                 driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/a[1]')
                 break
-            except NoSuchElementException as e:
+            except NoSuchElementException:
                 logger.info('登陆中，请等待')
             time.sleep(timeout)
             timeout += 2
@@ -144,12 +147,14 @@ class yaozh(object):
                 return False
 
         logger.info('登陆成功')
-
-        # 获取cookie
-        for dic in self.crawler.get_driver().get_cookies():
-            self.cookie += dic['name'] + '=' + dic['value'] + ';'
-
         return True
+
+    def getCookie(self):
+        # 获取cookie
+        cookie = ''
+        for dic in self.crawler.get_driver().get_cookies():
+            cookie += dic['name'] + '=' + dic['value'] + ';'
+        return cookie
 
     def check_and_save(self, params, html):
         stat, msg = check_rule(html)
@@ -172,7 +177,7 @@ class yaozh(object):
         elif stat == 3:
             logger.info(params)
         elif stat == 4:
-            self.refresh_cookie(params)
+            self.driver_data(params)
 
     def request_data(self):
         """
@@ -193,19 +198,22 @@ class yaozh(object):
             html = None
             _id = params['_id']
             d1 = datetime.datetime.now()
-            html_b = self.crawler.request_get_url(params['url'], header={'Cookie': self.cookie})
+            html_b = self.crawler.request_get_url(params['url'], header={'Cookie': self.getCookie()})
+
+            d2 = datetime.datetime.now()
+            time_consum.append((d2 - d1).total_seconds())
 
             if not html_b:
-                self.refresh_cookie(params)
+                for i in range(10):
+                    self.driver_data(params)
+                    params = self.urlpool.get()
+                time.sleep(10)
                 continue
             elif html_b:
                 html = html_b.decode('utf-8')
 
             if html is None:
                 continue
-
-            d2 = datetime.datetime.now()
-            time_consum.append((d2 - d1).total_seconds())
 
             self.check_and_save(params, html)
 
@@ -220,14 +228,24 @@ class yaozh(object):
             })
 
     def driver_data(self, params):
+        time_consum = []
+        _id = params['_id']
+        d1 = datetime.datetime.now()
         html = self.crawler.driver_get_url(params['url'])
+
+        d2 = datetime.datetime.now()
+        time_consum.append((d2 - d1).total_seconds())
         self.check_and_save(params, html)
 
-    def refresh_cookie(self, params):
-        self.driver_data(params)
-        # 获取cookie
-        for dic in self.crawler.get_driver().get_cookies():
-            self.cookie += dic['name'] + '=' + dic['value'] + ';'
+        d3 = datetime.datetime.now()
+        time_consum.append((d3 - d2).total_seconds())
+        logger.info('响应耗时，解析耗时.....' + str(time_consum))
+
+        self.time_cursor.save({
+            '_id': _id,
+            'url': params['url'],
+            'time': time_consum
+        })
 
     def parser(self):
         """
@@ -275,6 +293,6 @@ if __name__ == '__main__':
     while not zyfz.urlpool.empty():
         try:
             zyfz.request_data()
-        except BaseException as e:
+        except BaseException:
             logger.error(traceback.format_exc())
     # zyfz.parser()
