@@ -133,7 +133,7 @@ class Crawler(object):
                 'error': traceback.format_exc(),
                 'date': getNowDate()
             }
-            self.error_cursor(error_info)
+            self.error_cursor.save(error_info)
 
         return None
 
