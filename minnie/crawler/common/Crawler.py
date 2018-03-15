@@ -128,9 +128,12 @@ class Crawler(object):
         #     关闭远程连接
         #     logger.error(traceback.format_exc())
         except BaseException:
-            params['error'] = traceback.format_exc()
-            params['date'] = getNowDate()
-            self.error_cursor(params)
+            error_info = {
+                'url': url,
+                'error': traceback.format_exc(),
+                'date': getNowDate()
+            }
+            self.error_cursor(error_info)
 
         return None
 
