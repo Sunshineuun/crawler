@@ -144,15 +144,27 @@ class cfda(object):
             logger.info('耗时：' + str((d2-d1).total_seconds()))
 
     def parser(self):
+        logger.info('开始')
         query = {'url': {'$regex': 'http:[a-z0-9/.]+content.jsp\?'}}
+        rows = []
         for i, data in enumerate(self.html_cursor.find(query)):
-            if i % 1000 == 0:
+            if i+1 % 1000 == 0:
                 logger.info(i)
+                self.data_cursor.insert(rows)
+                rows.clear()
+
             soup = BeautifulSoup(data['html'], 'html.parser')
             tr_tags = soup.find_all('tr')[1:-3]
+            row = {}
             for tr in tr_tags:
-                td = tr.td
-                # TODO 格式化数据
+                text = tr.text.split('\n')
+                if len(text) < 3:
+                    continue
+                row[text[1]] = text[2]
+                rows.append(row)
+
+        self.data_cursor.insert(rows)
+        logger.info('结束')
 
     def save_oracle(self):
         sql = ''
