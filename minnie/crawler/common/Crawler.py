@@ -62,7 +62,7 @@ class Crawler(object):
         }
 
         # 驱动器地址
-        executable_path = 'D:\\Tech\\Tool\\chromedriver\\chromedriver.exe'
+        executable_path = 'C:\\chromedriver.exe'
 
         options = webdriver.ChromeOptions()
         prefs = {"profile.managed_default_content_settings.images": 2}
@@ -76,7 +76,7 @@ class Crawler(object):
                                        chrome_options=options,
                                        desired_capabilities=desired_capabilities)
 
-        self.driver.implicitly_wait(2)
+        # self.driver.implicitly_wait(2)
 
         # 代理设置
         # proxy = request.ProxyHandler({'http': '5.22.195.215:80'})  # 设置proxy
