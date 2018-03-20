@@ -89,12 +89,12 @@ class cfda(object):
         href_re = 'javascript:commitForECMA[\u4e00-\u9fa50-9a-zA-Z\(\)\?&=,\'.]+'
 
         while not self.urlpool.empty():
-            # d1 = datetime.datetime.now()
+            d1 = datetime.datetime.now()
             params = self.urlpool.get()
             # html_b = self.crawler.request_get_url(params['url'], header={'Cookie': self.get_cookie()})
             # html = html_b.decode('utf-8')
             html = self.crawler.driver_get_url(params['url'])
-            soup = BeautifulSoup(html)
+            soup = BeautifulSoup(html, 'html.parser')
             if params['url'].__contains__('search.jsp'):
                 a_tags = soup.find_all('a', href=re.compile(href_re))
 
@@ -140,8 +140,8 @@ class cfda(object):
             else:
                 logger.error('异常情况：' + params['url'])
 
-            # d2 = datetime.datetime.now()
-            # logger.info('耗时：' + str((d2-d1).total_seconds()))
+            d2 = datetime.datetime.now()
+            logger.info('耗时：' + str((d2-d1).total_seconds()))
 
     def parser(self):
         query = {'url': {'$regex': 'http:[a-z0-9/.]+content.jsp\?'}}
