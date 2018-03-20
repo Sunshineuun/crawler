@@ -2,6 +2,8 @@
 # encoding: utf-8
 # qiushengming-minnie
 import re
+import traceback
+
 from bs4 import BeautifulSoup
 
 from minnie.common import mlogger
@@ -11,6 +13,25 @@ from minnie.crawler.common.URLPool import URLPool
 from minnie.crawler.common.Utils import reg
 
 logger = mlogger.get_defalut_logger('zyzydq.log', 'zyzydq')
+
+
+def _replace(s):
+    return str(s).replace(u'\u3000', '') \
+        .replace('\r', '') \
+        .replace('\n', '') \
+        .replace('\t', '')
+
+
+exclude = ['方剂', '用法', '用量', '功能', '主治', '制备方法', '制法', '组成', '处方', '临床', '应用', '事项', '注意',
+           '检查', '生化', '预防', '别名', '备注', '适用', '人群', '禁忌', '适应症', '方解', '优点', '治疗', '功效',
+           '不良', '反应', '方名', '作用', '主要', '成份']
+
+
+def isenable(key):
+    for ex in exclude:
+        if str(key).__contains__(ex):
+            return True
+    return False
 
 
 class zyzydq(object):
@@ -40,7 +61,7 @@ class zyzydq(object):
                 'url': url_template.format(code=i),
                 'type': '药智网-中药方剂'
             }
-            self.urlpool.save_to_db(params)
+            self.urlpool.save_url(params)
         logger.info('url初始结束！！！')
 
     def request_data(self):
@@ -89,6 +110,35 @@ class zyzydq(object):
             if i % 1000 == 0:
                 logger.info(i)
             soup = BeautifulSoup(data['html'], 'html.parser')
+            div = soup.find('div', class_='art_body')
+
+            row = {
+                'name': soup.find(id='art_txt0').text,
+                'url': data['url']
+            }
+            key = None
+            a = ['【[\u4e00-\u9fa5]+】', '[\u4e00-\u9fa5]{0,10}：']
+            try:
+                if div:
+                    p_tags = div.find_all('p')
+                    for p in p_tags:
+                        text = _replace(p.text)
+
+                        for i in a:
+                            _key = reg(i, text)
+                            if _key and isenable(_key):
+                                _key = _key.replace('【', '').replace('】', '').replace('：', '')
+                                row[_key] = text.replace(_key, '')
+                                key = _key
+                                break
+
+                        if key:
+                            row[key] += text
+
+                data_cursor.save(row)
+            except BaseException as e:
+                print(traceback.format_exc())
+                print(1)
 
     def count(self):
         html_cursor = self.mongo.get_cursor(self.name, 'html')
@@ -100,5 +150,5 @@ class zyzydq(object):
 
 if __name__ == '__main__':
     zyfz = zyzydq('192.168.16.113')
-    zyfz.count()
-    # zyfz.parser()
+    # zyfz.count()
+    zyfz.parser()

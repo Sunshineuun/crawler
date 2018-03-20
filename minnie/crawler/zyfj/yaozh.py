@@ -52,10 +52,13 @@ class yaozh(object):
     药智网-中药方剂
     耗时：约14h
     数据量：34235条中药方剂
+    速率：
+        selenium 35000条 14h
+        selenium+urllib 25000条 6.5h
     """
     # TODO
     """
-    1.请求频繁了会出现400的情况，需要进行排查
+        1.检测网络中断
     """
 
     def __init__(self, ip='127.0.0.1'):
@@ -91,13 +94,15 @@ class yaozh(object):
         if self.urlpool.find_all_count():
             return
         url_template = 'https://db.yaozh.com/fangji/{code}.html'
+        result_list = []
         for i in range(35000):
-            params = {
+            _p = {
                 '_id': i,
                 'url': url_template.format(code=10000001 + i),
                 'type': '药智网-中药方剂'
             }
-            self.urlpool.save_to_db(params)
+            result_list.append(_p)
+        self.urlpool.save_url(result_list)
         logger.info('url初始结束！！！')
 
     def logout(self, driver):
@@ -227,6 +232,8 @@ class yaozh(object):
                 'time': time_consum
             })
 
+        logger.info('第' + str(self.pici) + '波结束......')
+
     def driver_data(self, params):
         time_consum = []
         _id = params['_id']
@@ -289,10 +296,10 @@ class yaozh(object):
 
 
 if __name__ == '__main__':
-    zyfz = yaozh('127.0.0.1')
-    while not zyfz.urlpool.empty():
-        try:
-            zyfz.request_data()
-        except BaseException:
-            logger.error(traceback.format_exc())
-    # zyfz.parser()
+    zyfz = yaozh('192.168.16.113')
+    # while not zyfz.urlpool.empty():
+    #     try:
+    #         zyfz.request_data()
+    #     except BaseException:
+    #         logger.error(traceback.format_exc())
+    zyfz.parser()

@@ -12,6 +12,7 @@ from minnie.crawler.common.Crawler import Crawler
 from minnie.crawler.common.MongoDB import MongodbCursor
 from minnie.crawler.common.URLPool import URLPool
 from minnie.crawler.common.Utils import reg
+from minnie.crawler.common.Excel import WriteXLSX
 
 logger = mlogger.get_defalut_logger('cnki_TCM.log', 'cnki_TCM')
 
@@ -83,7 +84,7 @@ class cnki(object):
         url2 = 'http://kb.tcm.cnki.net/TCM/TCM/GuideMore?node={node}&dbcode=zyff&kind='
         # 存储url到资源池中
         for i in range(1, 20):
-            self.urlpool.save_to_db(params={
+            self.urlpool.save_url(params={
                 'url': url.format(node=12700 + i),
                 'url2': url2.format(node=12700 + i),
                 'type': '1'
@@ -173,7 +174,7 @@ class cnki(object):
         字典形式
         :return:
         """
-        zyfz_zw_html_cursor = self.mongo.get_cursor('zyfj', 'zyfz_zw_html')
+        zyfz_zw_html_cursor = self.mongo.get_cursor(self.name, 'html')
         zyfz_zw_html_result = zyfz_zw_html_cursor.find({
             'url': {
                 '$regex': '127[0-9]{2}&'
@@ -211,6 +212,7 @@ class cnki(object):
         dic = self.parser_1()
         arr = []
         zgzw_recur_row(dic=dic['child'], s='', arr=arr)
+        print(arr)
         return arr
 
     @staticmethod
@@ -237,4 +239,10 @@ class cnki(object):
 if __name__ == '__main__':
     # 中国知网-中药方剂解析
     zgzw = cnki('192.168.16.113')
-    zgzw.request_data()
+    result = zgzw.parser_2()
+    params = {
+        'filename': '中国知网_kb.tcm.cnki.net.xlsx',
+        'data': result
+    }
+    writexlsx = WriteXLSX(path='D://Temp//' + params['filename'])
+    writexlsx.write2(params)

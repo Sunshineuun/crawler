@@ -47,7 +47,7 @@ class zhongyoo(object):
             self.url_index = i
             params['_id'] = i
             params['url'] = 'http://www.zhongyoo.com/fangji/page_{index}.html'.format(index=i)
-            self.urlpool.save_to_db(params)
+            self.urlpool.save_url(params)
 
     def request_date(self):
         """
@@ -110,7 +110,9 @@ class zhongyoo(object):
             div = soup.find('div', id='contentText')
             if div:
                 p_tags = div.find_all('p')
-                row = {}
+                row = {
+                    'url': data['url']
+                }
                 tag = ''
                 for p in p_tags:
                     if reg('【[\u4e00-\u9fa5]+】', p.text):
@@ -119,7 +121,12 @@ class zhongyoo(object):
                     elif reg('[\u4e00-\u9fa5]+', tag):
                         row[tag] += p.text
 
-                row['url'] = data['url']
+                if '【方剂名】' in row \
+                        and str(row['【方剂名】']).__contains__('，'):
+                    index = row['【方剂名】'].index('，')
+                    temp = row['【方剂名】']
+                    row['【方剂名】'] = temp[0:index]
+                    row['【方剂出处】'] = temp[index + 1:]
                 data_cursor.save(row)
             else:
                 html_cursor.delete_one({'_id': data['_id']})
@@ -136,5 +143,5 @@ class zhongyoo(object):
 if __name__ == '__main__':
     zyfz = zhongyoo('192.168.16.113')
 
-    zyfz.request_date()
+    # zyfz.request_date()
     zyfz.parser()

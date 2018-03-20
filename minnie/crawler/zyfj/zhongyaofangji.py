@@ -56,7 +56,7 @@ class zhongyaofangji(object):
                 'url': a['href'],
                 'type': 'zhongyaofangji-中药方剂'
             }
-            self.urlpool.save_to_db(params)
+            self.urlpool.save_url(params)
             _id += 1
         logger.info('url初始结束！')
 
@@ -91,16 +91,22 @@ class zhongyaofangji(object):
                 pass
 
     def parser(self):
+        """
+        耗时......1222.376973
+        :return:
+        """
         html_crusor = self.mongo.get_cursor(self.name, 'html')
         data_crusor = self.mongo.get_cursor(self.name, 'data')
 
+        d1 = datetime.datetime.now()
         for data in html_crusor.find():
-            soup = BeautifulSoup(data, 'lxml')
+            soup = BeautifulSoup(data['html'], 'lxml')
             row = {
                 '_id': data['_id'],
                 'url': data['url'],
+                'name': soup.find('a', href=re.compile(data['url'][25:]+'#+')).text
             }
-            p_tags = soup.find('p')
+            p_tags = soup.find_all('p')
             if not len(p_tags):
                 self.urlpool.update({
                     'url': data['url']
@@ -112,10 +118,15 @@ class zhongyaofangji(object):
                 continue
 
             for p in p_tags:
-                tag = reg('【[\u4e00-\u9fa5]+】', p.text)
-                row[tag] = p.text.replace(tag, '')
+                try:
+                    tag = reg('【[\u4e00-\u9fa5]+】', p.text)
+                    row[tag] = p.text.replace(tag, '')
+                except:
+                    pass
 
-            data_crusor.insert(row)
+            data_crusor.save(row)
+        d2 = datetime.datetime.now()
+        print('耗时......' + str((d2 - d1).total_seconds()))
 
     def test(self):
         try:
@@ -130,7 +141,7 @@ class zhongyaofangji(object):
                     'url': a['href'],
                     'type': 'zhongyaofangji-中药方剂'
                 }
-                self.urlpool.save_to_db(params)
+                self.urlpool.save_url(params)
                 _id += 1
         except BaseException:
             pass
@@ -143,4 +154,4 @@ class zhongyaofangji(object):
 if __name__ == '__main__':
     # TODO 修改URL存储的地址
     zyfz = zhongyaofangji('192.168.16.113')
-    zyfz.request_data()
+    zyfz.parser()
