@@ -12,6 +12,7 @@ from urllib import request, error, parse
 
 import pymongo
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from minnie.common import mlogger
@@ -54,7 +55,7 @@ class Crawler(object):
     """
 
     def __init__(self):
-        self.mongo = pymongo.MongoClient('192.168.16.138', 27017)
+        self.mongo = pymongo.MongoClient('192.168.16.113', 27017)
         self.error_cursor = self.mongo['minnie']['crawler_error']
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:35.0) Gecko/20100101 Firefox/35.0',
@@ -75,6 +76,8 @@ class Crawler(object):
                                        chrome_options=options,
                                        desired_capabilities=desired_capabilities)
 
+        self.driver.implicitly_wait(2)
+
         # 代理设置
         # proxy = request.ProxyHandler({'http': '5.22.195.215:80'})  # 设置proxy
         # opener = request.build_opener(proxy)  # 挂载opener
@@ -93,7 +96,18 @@ class Crawler(object):
         # if not getHttpStatus(self.driver):
         #     return False
 
-        result = self.driver.page_source
+        try:
+            result = self.driver.page_source
+        except TimeoutException as exception:
+            result = ''
+            error_info = {
+                'url': url,
+                'type': exception,
+                'error': traceback.format_exc(),
+                'date': getNowDate()
+            }
+            self.error_cursor.save(error_info)
+
         return result
 
     def request_get_url(self, url, params=None, header=None):
@@ -127,9 +141,10 @@ class Crawler(object):
         # except RemoteDisconnected:
         #     关闭远程连接
         #     logger.error(traceback.format_exc())
-        except BaseException:
+        except BaseException as exception:
             error_info = {
                 'url': url,
+                'type': exception,
                 'error': traceback.format_exc(),
                 'date': getNowDate()
             }
