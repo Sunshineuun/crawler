@@ -11,7 +11,8 @@ import queue
 class URLPool(object):
     """
     用MongoDB存储url
-
+    2018-3-19
+        加速URL的初始化，MongoDB批量插入
     """
 
     def __init__(self, mongo, name):
@@ -22,8 +23,8 @@ class URLPool(object):
         """
         self._queue = queue.Queue(maxsize=1000)
         self.cursor = mongo.get_cursor(name, 'url')
+        self.temp = []  # mongo批量插入前进行存储
         self.find_by_db()
-        print('urlpool init!')
 
     def put(self, params):
         """
@@ -75,9 +76,15 @@ class URLPool(object):
                 self._queue.put(temp)
         return self._queue.empty()
 
-    def save_to_db(self, params):
-        params['isenable'] = '1'
-        params['insert_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    def save_url(self, params):
+        if type(params) is list:
+            for p in params:
+                if type(p) == dict:
+                    p['isenable'] = '1'
+                    p['insert_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        elif type(params) == dict:
+                params['isenable'] = '1'
+                params['insert_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.cursor.insert(params)
 
     def find_all_count(self):
