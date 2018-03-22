@@ -9,12 +9,12 @@ from bs4 import BeautifulSoup
 
 from minnie.crawler.common.Excel import WriteXLSX
 from minnie.crawler.common.Utils import reg
-from python.no_work.utils import logger
+from python.no_work.utils import mlogger
 from python.no_work.utils.urlpool import URLPool
 from python.no_work.utils.crawler import Crawler
 from python.no_work.utils.mongodb import MongodbCursor
 
-logger = logger.get_defalut_logger('cnki_TCM.log', 'cnki_TCM')
+logger = mlogger.get_defalut_logger('cnki_TCM.log', 'cnki_TCM')
 
 
 def zgzw_recur_dic(_result, _code, _p):

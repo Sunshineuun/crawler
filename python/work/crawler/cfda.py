@@ -8,13 +8,13 @@ import re
 from bs4 import BeautifulSoup
 
 from minnie.crawler.common.Utils import reg
-from python.no_work.utils import logger
+from python.no_work.utils import mlogger
 from python.no_work.utils.urlpool import URLPool
 from python.no_work.utils.crawler import Crawler
 from python.no_work.utils.mongodb import MongodbCursor
 from python.no_work.utils.oracle import OralceCursor
 
-logger = logger.get_defalut_logger('cfda.log', 'cfda')
+logger = mlogger.get_defalut_logger('cfda.log', 'cfda')
 
 
 class cfda(object):

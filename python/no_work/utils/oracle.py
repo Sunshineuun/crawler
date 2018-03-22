@@ -2,9 +2,9 @@
 import cx_Oracle
 import pymysql
 
-from python.no_work.utils import logger
+from python.no_work.utils import mlogger
 
-logger = logger.get_defalut_logger('log/common.log', 'oracle')
+logger = mlogger.get_defalut_logger('log/common.log', 'oracle')
 
 
 class OralceCursor(object):

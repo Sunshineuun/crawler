@@ -16,9 +16,9 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from minnie.crawler.common.Utils import getNowDate
-from python.no_work.utils import logger
+from python.no_work.utils import mlogger
 
-logger = logger.get_defalut_logger('crawler.log', 'crawler')
+logger = mlogger.get_defalut_logger('crawler.log', 'crawler')
 
 
 def getHttpStatus(browser):
