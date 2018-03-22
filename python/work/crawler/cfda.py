@@ -174,6 +174,8 @@ class cfda(object):
         数据转移到oracle上
         :return:
         """
+        logger.info('数据库存储开始')
+
         sql = 'INSERT INTO KBMS_DFSX_KNOWLEDGE_UP_BAK (ID, PRODUCT_NAME, TRAD_NAME, SPEC, ZC_FORM, PERMIT_NO, PRODUCTION_UNIT, CODE_REMARK, TYPE) VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9)'
         params = {
             'ID': ['药品本位码'],
@@ -227,14 +229,10 @@ class cfda(object):
                     self.oralce_cursor.executeSQLParams(sql, row)
             else:
                 self.oralce_cursor.executeSQLParams(sql, row)
-        logger.info('结束')
+        logger.info('数据库存储结束')
 
 
 if __name__ == '__main__':
     z = cfda('192.168.16.113')
-    z.parser()
+    # z.parser()
     z.to_oracle()
-    # print(
-    #     reg(r'[^\u4e00-\u9fa5]+', '----小明'),
-    #     reg(r'([^\u4e00-\u9fa5]+)', '试剂(注射用)')
-    # )

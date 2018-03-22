@@ -157,7 +157,7 @@ class Crawler(object):
         # 代理设置
         proxy = request.ProxyHandler({'http': '122.114.31.177:808'})  # 设置proxy
         # opener = request.build_opener(proxy)  # 挂载opener
-        self.opener = request.build_opener(request.HTTPHandler, proxy)
+        self.opener = request.build_opener(request.HTTPHandler)
         self.opener.addheaders = [get_user_agent()]
         request.install_opener(opener=self.opener)
 

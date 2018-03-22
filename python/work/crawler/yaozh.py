@@ -19,35 +19,6 @@ from python.no_work.utils.mongodb import MongodbCursor
 logger = mlogger.get_defalut_logger('yaozhi.log', 'yaozhi')
 
 
-def check_rule(html):
-    """
-    规则
-    :return: 校验不同返回True，检验通过返回False
-    """
-    if html and html.__contains__('CryptoJS'):
-        return 4, '被加密了，刷新'
-
-    if html is None and html is False:
-        return 1, 'html为空'
-
-    _soup = BeautifulSoup(html, 'html.parser')
-
-    # 可能存在tbody为空的情况，为空则该了解无效
-    tbody = _soup.find('tbody')
-    if tbody is None:
-        return 1, 'tbody为空'
-
-    tag = _soup.find('span', class_='toFindImg')
-    if tag is None:
-        return 1, 'sapn为空，单元格中无值'
-    elif tag.text == '暂无权限':
-        return 2, '暂无权限'
-    elif tag.text != '暂无权限':
-        return 0, '成功'
-    else:
-        return 3, '未知情况'
-
-
 class yaozh(object):
     def __init__(self, ip=None):
 
@@ -148,6 +119,34 @@ class yaozh(object):
         logger.info('登陆成功')
         return True
 
+    def check_rule(self, html):
+        """
+        规则
+        :return: 校验不同返回True，检验通过返回False
+        """
+        if html and html.__contains__('CryptoJS'):
+            return 4, '被加密了，刷新'
+
+        if html is None and html is False:
+            return 1, 'html为空'
+
+        _soup = BeautifulSoup(html, 'html.parser')
+
+        # 可能存在tbody为空的情况，为空则该了解无效
+        tbody = _soup.find('tbody')
+        if tbody is None:
+            return 1, 'tbody为空'
+
+        tag = _soup.find('span', class_='toFindImg')
+        if tag is None:
+            return 1, 'sapn为空，单元格中无值'
+        elif tag.text == '暂无权限':
+            return 2, '暂无权限'
+        elif tag.text != '暂无权限':
+            return 0, '成功'
+        else:
+            return 3, '未知情况'
+
     def get_cookie(self):
         # 获取cookie
         cookie = ''
@@ -156,10 +155,10 @@ class yaozh(object):
         return cookie
 
     def check_and_save(self, params, html):
-        stat, msg = check_rule(html)
+        stat, msg = self.check_rule(html)
         if stat == 0:
             params['html'] = html
-            params['source'] = '药智网-中药方剂'
+            params['source'] = self._cn_name
             params['create_date'] = getNowDate()
             self._html_cursor.save(params)
             self._urlpool.update_success_url(params['url'])
@@ -284,15 +283,62 @@ class yaozh_zyfj(yaozh):
         for i in range(35000):
             result_list.append({
                 'url': url.format(code=10000001 + i),
-                'type': '药智网-中药方剂'
+                'type': self._cn_name
             })
         self._urlpool.save_url(result_list)
         logger.info('url初始结束！！！')
+
+
+class yaozh_interaction(yaozh):
+    """
+    https://db.yaozh.com/interaction
+    """
+
+    def get_name(self):
+        return 'yaozh_interaction'
+
+    def get_cn_name(self):
+        return '药智网-相互作用'
+
+    def init_url(self):
+        if self._urlpool.find_all_count():
+            return
+
+        url = 'https://db.yaozh.com/interaction/{code}.html'
+        result_list = []
+        for i in range(7100):
+            result_list.append({
+                'url': url.format(code=i),
+                'type': self._cn_name
+            })
+        self._urlpool.save_url(result_list)
+        logger.info('url初始结束！！！')
+
+    def check_and_save(self, params, html):
+        params['html'] = html
+        params['source'] = self._cn_name
+        params['create_date'] = getNowDate()
+        self._html_cursor.save(params)
+        self._urlpool.update_success_url(params['url'])
+
+
+class yaozh_monitored(yaozh):
+    def get_name(self):
+        return 'yaozh_monitored'
+
+    def get_cn_name(self):
+        return '药智网-辅助与重点监控用药'
+
+    def init_url(self):
+        pass
 
 
 if __name__ == '__main__':
     # y = yaozh_zy(ip='192.168.16.113')
     # y.parser()
 
-    y1 = yaozh_zyfj(ip='192.168.16.113')
-    y1.parser()
+    # y1 = yaozh_zyfj(ip='192.168.16.113')
+    # y1.parser()
+
+    y2 = yaozh_interaction(ip='192.168.16.113')
+    y2.startup()
