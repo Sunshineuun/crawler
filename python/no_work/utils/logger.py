@@ -61,6 +61,23 @@ def get_defalut_logger(filename, root):
     return logger
 
 
+class MinnieLogger(object):
+    """
+    logger.error(traceback.format_exc())
+    """
+    def __init__(self):
+        pass
+
+    def error(self, msg):
+        pass
+
+    def info(self, msg):
+        pass
+
+    def debug(self, msg):
+        pass
+
+
 if __name__ == '__main__':
     logger1 = get_defalut_logger('log/1.log', '1')
     logger2 = get_defalut_logger('log/2.log', '2')

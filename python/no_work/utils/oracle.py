@@ -2,15 +2,15 @@
 import cx_Oracle
 import pymysql
 
-from minnie.common import mlogger
+from python.no_work.utils import logger
 
-logger = mlogger.get_defalut_logger('log/common.log', 'moracle')
+logger = logger.get_defalut_logger('log/common.log', 'oracle')
 
 
 class OralceCursor(object):
     def __init__(self):
-        info = 'archer/archer@localhost/minnie'
-        # info = 'luun/luun@192.168.16.113/sunshine'
+        # info = 'archer/archer@localhost/minnie'
+        info = 'luun/luun@192.168.16.113/sunshine'
         # info = 'kbms/kbms@192.168.5.24/orcl'
         # info = 'spiders/123456@192.168.4.30/orcl'  # 数据挖掘组数据解析支持
         self.minnie_oracle = cx_Oracle.connect(info, encoding='utf-8')

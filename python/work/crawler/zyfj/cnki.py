@@ -7,14 +7,14 @@ import time
 
 from bs4 import BeautifulSoup
 
-from minnie.common import mlogger
-from minnie.crawler.common.Crawler import Crawler
-from minnie.crawler.common.MongoDB import MongodbCursor
-from minnie.crawler.common.URLPool import URLPool
-from minnie.crawler.common.Utils import reg
 from minnie.crawler.common.Excel import WriteXLSX
+from minnie.crawler.common.Utils import reg
+from python.no_work.utils import logger
+from python.no_work.utils.urlpool import URLPool
+from python.no_work.utils.crawler import Crawler
+from python.no_work.utils.mongodb import MongodbCursor
 
-logger = mlogger.get_defalut_logger('cnki_TCM.log', 'cnki_TCM')
+logger = logger.get_defalut_logger('cnki_TCM.log', 'cnki_TCM')
 
 
 def zgzw_recur_dic(_result, _code, _p):

@@ -6,13 +6,13 @@ import traceback
 
 from bs4 import BeautifulSoup
 
-from minnie.common import mlogger
-from minnie.crawler.common.Crawler import Crawler
-from minnie.crawler.common.MongoDB import MongodbCursor
-from minnie.crawler.common.URLPool import URLPool
 from minnie.crawler.common.Utils import reg
+from python.no_work.utils import logger
+from python.no_work.utils.urlpool import URLPool
+from python.no_work.utils.crawler import Crawler
+from python.no_work.utils.mongodb import MongodbCursor
 
-logger = mlogger.get_defalut_logger('zyzydq.log', 'zyzydq')
+logger = logger.get_defalut_logger('zyzydq.log', 'zyzydq')
 
 
 def _replace(s):

@@ -3,20 +3,18 @@
 # qiushengming-minnie
 
 import datetime
-import random
-import time
-import traceback
-
 import re
+
 from bs4 import BeautifulSoup
 
-from minnie.common import mlogger
-from minnie.crawler.common.Crawler import Crawler
-from minnie.crawler.common.MongoDB import MongodbCursor
-from minnie.crawler.common.URLPool import URLPool
 from minnie.crawler.common.Utils import reg
+from python.no_work.utils import logger
+from python.no_work.utils.urlpool import URLPool
+from python.no_work.utils.crawler import Crawler
+from python.no_work.utils.mongodb import MongodbCursor
+from python.no_work.utils.oracle import OralceCursor
 
-logger = mlogger.get_defalut_logger('cfda.log', 'cfda')
+logger = logger.get_defalut_logger('cfda.log', 'cfda')
 
 
 class cfda(object):
@@ -36,6 +34,8 @@ class cfda(object):
         self.html_cursor = self.mongo.get_cursor(self.name, 'html')
         self.time_cursor = self.mongo.get_cursor(self.name, 'time')
         self.data_cursor = self.mongo.get_cursor(self.name, 'data')
+
+        self.oralce_cursor = OralceCursor()
 
         d1 = datetime.datetime.now()
         self.init_url()
@@ -141,35 +141,100 @@ class cfda(object):
                 logger.error('异常情况：' + params['url'])
 
             d2 = datetime.datetime.now()
-            logger.info('耗时：' + str((d2-d1).total_seconds()))
+            logger.info('耗时：' + str((d2 - d1).total_seconds()))
 
     def parser(self):
         logger.info('开始')
         query = {'url': {'$regex': 'http:[a-z0-9/.]+content.jsp\?'}}
         rows = []
         for i, data in enumerate(self.html_cursor.find(query)):
-            if i+1 % 1000 == 0:
+            if (i + 1) % 10000 == 0:
                 logger.info(i)
                 self.data_cursor.insert(rows)
                 rows.clear()
 
             soup = BeautifulSoup(data['html'], 'html.parser')
             tr_tags = soup.find_all('tr')[1:-3]
-            row = {}
+            row = {
+                '_id': data['_id'],
+                'url': data['url']
+            }
             for tr in tr_tags:
                 text = tr.text.split('\n')
                 if len(text) < 3:
                     continue
                 row[text[1]] = text[2]
-                rows.append(row)
+            rows.append(row)
 
         self.data_cursor.insert(rows)
         logger.info('结束')
 
-    def save_oracle(self):
-        sql = ''
+    def to_oracle(self):
+        """
+        数据转移到oracle上
+        :return:
+        """
+        sql = 'INSERT INTO KBMS_DFSX_KNOWLEDGE_UP_BAK (ID, PRODUCT_NAME, TRAD_NAME, SPEC, ZC_FORM, PERMIT_NO, PRODUCTION_UNIT, CODE_REMARK, TYPE) VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9)'
+        params = {
+            'ID': ['药品本位码'],
+            'PRODUCT_NAME': ['产品名称', '产品名称（中文）'],
+            'TRAD_NAME': ['商品名', '商品名（中文）'],
+            'SPEC': ['规格', '规格（中文）'],
+            'ZC_FORM': ['剂型', '剂型（中文）'],
+            'PERMIT_NO': ['批准文号', '注册证号'],
+            'PRODUCTION_UNIT': ['生产单位', '生产厂商（英文）'],
+            'CODE': ['药品本位码备注']
+        }
+        params1 = ['ID', 'PRODUCT_NAME', 'TRAD_NAME', 'SPEC', 'ZC_FORM', 'PERMIT_NO', 'PRODUCTION_UNIT', 'CODE']
+
+        ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', '化学药品', '医用气体', '医用气体(气态氧)', '其他', '气态', '液态和气态', '非剂型', '气态 液态',
+                 '体外诊断试剂', '鼻用制剂', '液态气体', '非制剂,其他:氧', '液态', '氧(气态、液态)', '液体	', '气剂', '液态氧', '气体、液态', '医用氧(液态)',
+                 '有效成份', '液态空气', '吸入性气体', '氧', '医用氧气', '氧气', '医用氧(气态、液态)', '呼吸', '其他:医用氧(气态)']
+        PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医用氧气', '医用氧(液态)']
+
+        # 循环记录
+        for data in self.data_cursor.find():
+            row = ['0', '1', '2', '3', '4', '5', '6', '', '8']
+            # 字典
+            for i, k in enumerate(params1):
+                # 字典中的数组
+                for v in params[k]:
+                    if v in data:
+                        row[i] = data[v]
+
+            # 剂型不在被收集队列里面；剂型不在排除队列里面；
+            # 剂型不包含原料药，试剂这两个字样；剂型需要包含中文；
+            # 剂型不为空；
+            # 产品名称不在排除队列中；产品名称不包含试剂；
+            if row[4] not in ZC_EX \
+                    and not reg('(原料药)|(试剂)', row[4]) \
+                    and reg('[\u4e00-\u9fa5]+', row[4]) \
+                    and row[1] not in PRODUCT_NAME_EX \
+                    and not reg('(试剂)', row[1]) \
+                    and row[4]:
+                """"""
+                row[8] = '1'
+            else:
+                row[8] = '0'
+
+            # 校验本位码农是否多个
+            if len(row[0]) < 10:
+                continue
+            if row[7] != '':
+                for code in row[7].split('；'):
+                    row[0] = reg('[0-9]{14}', code)
+                    row[3] = reg('\[.*\]', code).replace('[', '').replace(']', '')
+                    self.oralce_cursor.executeSQLParams(sql, row)
+            else:
+                self.oralce_cursor.executeSQLParams(sql, row)
+        logger.info('结束')
 
 
 if __name__ == '__main__':
     z = cfda('192.168.16.113')
     z.parser()
+    z.to_oracle()
+    # print(
+    #     reg(r'[^\u4e00-\u9fa5]+', '----小明'),
+    #     reg(r'([^\u4e00-\u9fa5]+)', '试剂(注射用)')
+    # )
