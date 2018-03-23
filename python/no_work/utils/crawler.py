@@ -169,12 +169,12 @@ class Crawler(object):
         :return: 长文本
         """
         time.sleep(0.5)
-        self.driver.get(url)
 
         # if not getHttpStatus(self.driver):
         #     return False
 
         try:
+            self.driver.get(url)
             result = self.driver.page_source
         except TimeoutException as exception:
             result = ''
