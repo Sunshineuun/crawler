@@ -5,27 +5,24 @@
 import random
 import re
 import time
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import NoSuchElementException
 
 from minnie.crawler.common.Utils import getNowDate
+from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils import mlogger
-from python.no_work.utils.urlpool import URLPool
-from python.no_work.utils.crawler import Crawler
-from python.no_work.utils.mongodb import MongodbCursor
 
 logger = mlogger.get_defalut_logger('yaozhi.log', 'yaozhi')
 
 
-class yaozh(object):
+class yaozh(BaseCrawler):
+    __metaclass__ = ABCMeta
+
     def __init__(self, ip=None):
 
-        if not ip:
-            ip = '127.0.0.1'
-        self._name = self.get_name()
-        self._cn_name = self.get_cn_name()
+        super().__init__(ip)
         self._users = [{
             'username': 'qiushengming@aliyun.com',
             'pwd': 'qd7qrjm3'
@@ -37,33 +34,8 @@ class yaozh(object):
             'pwd': 'a1uj30gb'
         }]
 
-        if not self._name:
-            raise ValueError
-
-        self._mongo = MongodbCursor(ip)
-        self._urlpool = URLPool(self._mongo, self._name)
-        self._crawler = Crawler()
-
-        self._html_cursor = self._mongo.get_cursor(self._name, 'html')
-        self._data_cursor = self._mongo.get_cursor(self._name, 'data')
-
-        self.init_url()
-
     @abstractmethod
-    def init_url(self):
-        pass
-
-    @abstractmethod
-    def get_name(self):
-        """
-        名称标志：
-            主要用于创建mongodb的数据库
-        :return:
-        """
-        pass
-
-    @abstractmethod
-    def get_cn_name(self):
+    def test(self):
         pass
 
     def logout(self):
@@ -130,14 +102,14 @@ class yaozh(object):
         if html is None and html is False:
             return 1, 'html为空'
 
-        _soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, 'html.parser')
 
         # 可能存在tbody为空的情况，为空则该了解无效
-        tbody = _soup.find('tbody')
+        tbody = soup.find('tbody')
         if tbody is None:
             return 1, 'tbody为空'
 
-        tag = _soup.find('span', class_='toFindImg')
+        tag = soup.find('span', class_='toFindImg')
         if tag is None:
             return 1, 'sapn为空，单元格中无值'
         elif tag.text == '暂无权限':
@@ -235,13 +207,13 @@ class yaozh_zy(yaozh):
     def __init__(self, ip=None):
         super().__init__(ip)
 
-    def get_name(self):
+    def _get_name(self):
         return 'yaozh_zy'
 
-    def get_cn_name(self):
+    def _get_cn_name(self):
         return '药智网-中药药材'
 
-    def init_url(self):
+    def _init_url(self):
 
         if self._urlpool.find_all_count():
             return
@@ -257,18 +229,21 @@ class yaozh_zy(yaozh):
         self._urlpool.save_url(result_list)
         logger.info('url初始结束！！！')
 
+    def test(self):
+        pass
+
 
 class yaozh_zyfj(yaozh):
     def __init__(self, ip):
         super().__init__(ip)
 
-    def get_name(self):
+    def _get_name(self):
         return 'yaozh_zyfj'
 
-    def get_cn_name(self):
+    def _get_cn_name(self):
         return '药智网-中药方剂'
 
-    def init_url(self):
+    def _init_url(self):
         """
         https://db.yaozh.com/fangji/10000001.html
         初始化到数据库中
@@ -288,19 +263,23 @@ class yaozh_zyfj(yaozh):
         self._urlpool.save_url(result_list)
         logger.info('url初始结束！！！')
 
+    def test(self):
+        pass
 
+
+# 相互作用
 class yaozh_interaction(yaozh):
     """
     https://db.yaozh.com/interaction
     """
 
-    def get_name(self):
+    def _get_name(self):
         return 'yaozh_interaction'
 
-    def get_cn_name(self):
+    def _get_cn_name(self):
         return '药智网-相互作用'
 
-    def init_url(self):
+    def _init_url(self):
         if self._urlpool.find_all_count():
             return
 
@@ -321,15 +300,22 @@ class yaozh_interaction(yaozh):
         self._html_cursor.save(params)
         self._urlpool.update_success_url(params['url'])
 
+    def test(self):
+        pass
 
+
+# 重点用药
 class yaozh_monitored(yaozh):
-    def get_name(self):
+    def _get_name(self):
         return 'yaozh_monitored'
 
-    def get_cn_name(self):
+    def _get_cn_name(self):
         return '药智网-辅助与重点监控用药'
 
-    def init_url(self):
+    def _init_url(self):
+        pass
+
+    def test(self):
         pass
 
 

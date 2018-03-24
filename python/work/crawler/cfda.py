@@ -8,10 +8,8 @@ import re
 from bs4 import BeautifulSoup
 
 from minnie.crawler.common.Utils import reg
+from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils import mlogger
-from python.no_work.utils.urlpool import URLPool
-from python.no_work.utils.crawler import Crawler
-from python.no_work.utils.mongodb import MongodbCursor
 from python.no_work.utils.oracle import OralceCursor
 
 logger = mlogger.get_defalut_logger('cfda.log', 'cfda')
@@ -63,7 +61,7 @@ UPDATE KBMS_DFSX_KNOWLEDGE_UP SET IS_ENABLE = '5' WHERE IS_ENABLE = '1'
 """
 
 
-class cfda(object):
+class cfda(BaseCrawler):
     """
     国家食品药品监督管理总局
     """
@@ -73,24 +71,12 @@ class cfda(object):
     """
 
     def __init__(self, ip='127.0.0.1'):
+        super().__init__(ip)
         self.name = 'cfda'
         self.pici = 0
         self.url_index = 0
 
-        self.mongo = MongodbCursor(ip)
-        self.urlpool = URLPool(self.mongo, self.name)
-        self.crawler = Crawler()
-
-        self.html_cursor = self.mongo.get_cursor(self.name, 'html')
-        self.time_cursor = self.mongo.get_cursor(self.name, 'time')
-        self.data_cursor = self.mongo.get_cursor(self.name, 'data')
-
         self.oralce_cursor = OralceCursor()
-
-        d1 = datetime.datetime.now()
-        self.init_url()
-        d2 = datetime.datetime.now()
-        logger.info('初始化url耗时' + str((d2 - d1).total_seconds()))
 
     def init_url(self):
         """
@@ -99,7 +85,7 @@ class cfda(object):
         page:翻页参数
         :return:
         """
-        self.url_index = self.urlpool.find_all_count()
+        self.url_index = self._urlpool.find_all_count()
         if self.url_index:
             return
 
@@ -124,12 +110,12 @@ class cfda(object):
                     'type': 'CFDA-国产药'
                 }
                 result_list.append(_p)
-        self.urlpool.save_url(result_list)
-        self.url_index = self.urlpool.find_all_count()
+        self._urlpool.save_url(result_list)
+        self.url_index = self._urlpool.find_all_count()
 
     def get_cookie(self):
         cookie = ''
-        for dic in self.crawler.get_driver().get_cookies():
+        for dic in self._crawler.get_driver().get_cookies():
             cookie += dic['name'] + '=' + dic['value'] + ';'
         return cookie
 
@@ -138,12 +124,12 @@ class cfda(object):
         domain_url = 'http://app1.sfda.gov.cn/datasearch/face3/'
         href_re = 'javascript:commitForECMA[\u4e00-\u9fa50-9a-zA-Z\(\)\?&=,\'.]+'
 
-        while not self.urlpool.empty():
+        while not self._urlpool.empty():
             d1 = datetime.datetime.now()
-            params = self.urlpool.get()
+            params = self._urlpool.get()
             # html_b = self.crawler.request_get_url(params['url'], header={'Cookie': self.get_cookie()})
             # html = html_b.decode('utf-8')
-            html = self.crawler.driver_get_url(params['url'])
+            html = self._crawler.driver_get_url(params['url'])
             soup = BeautifulSoup(html, 'html.parser')
             if params['url'].__contains__('search.jsp'):
                 a_tags = soup.find_all('a', href=re.compile(href_re))
@@ -156,8 +142,8 @@ class cfda(object):
 
                 if a_tags and len(a_tags):
                     params['html'] = html
-                    self.html_cursor.insert(params)
-                    self.urlpool.update_success_url(params['url'])
+                    self._html_cursor.insert(params)
+                    self._urlpool.update_success_url(params['url'])
                     params.pop('html')
 
                     url_list = []
@@ -173,7 +159,7 @@ class cfda(object):
                         }
                         self.url_index += 1
                         url_list.append(_p)
-                    self.urlpool.save_url(url_list)
+                    self._urlpool.save_url(url_list)
             elif params['url'].__contains__('content.jsp'):
                 tbody = soup.find_all('tbody')
                 # if tbody:
@@ -184,9 +170,9 @@ class cfda(object):
                 if tbody:
                     params['html'] = html
                     # 保存html数据
-                    self.html_cursor.insert(params)
+                    self._html_cursor.insert(params)
                     # 更新数据
-                    self.urlpool.update_success_url(params['url'])
+                    self._urlpool.update_success_url(params['url'])
             else:
                 logger.error('异常情况：' + params['url'])
 
@@ -197,10 +183,10 @@ class cfda(object):
         logger.info('开始')
         query = {'url': {'$regex': 'http:[a-z0-9/.]+content.jsp\?'}}
         rows = []
-        for i, data in enumerate(self.html_cursor.find(query)):
+        for i, data in enumerate(self._html_cursor.find(query)):
             if (i + 1) % 10000 == 0:
                 logger.info(i)
-                self.data_cursor.insert(rows)
+                self._data_cursor.insert(rows)
                 rows.clear()
 
             soup = BeautifulSoup(data['html'], 'html.parser')
@@ -216,7 +202,7 @@ class cfda(object):
                 row[text[1]] = text[2]
             rows.append(row)
 
-        self.data_cursor.insert(rows)
+        self._data_cursor.insert(rows)
         logger.info('结束')
 
     def to_oracle(self):
@@ -245,7 +231,7 @@ class cfda(object):
         PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医用氧气', '医用氧(液态)']
 
         # 循环记录
-        for data in self.data_cursor.find():
+        for data in self._data_cursor.find():
             row = ['0', '1', '2', '3', '4', '5', '6', '', '8']
             # 字典
             for i, k in enumerate(params1):

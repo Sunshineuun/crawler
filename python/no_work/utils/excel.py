@@ -58,7 +58,7 @@ class WriteXLSX(object):
 
         self.write_title(title)
         row = 0
-        for data in self.mongo[_dbname][_tname].find({'药品本位码':{'$exists':'true'},'$where':"(this.药品本位码.length > 25)"}):
+        for data in self.mongo[_dbname][_tname].find():
             row += 1
             column = -1
             for k in title:
@@ -126,6 +126,6 @@ def get_title(_dbname, _tname):
 
 
 if __name__ == '__main__':
-    w = WriteXLSX(path='D://Temp//aa.xlsx')
+    w = WriteXLSX(path='D://Temp//cfda.xlsx')
     w.write('cfda', 'data')
     pass

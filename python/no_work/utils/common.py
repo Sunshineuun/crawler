@@ -39,3 +39,19 @@ def decode(s):
     :return:
     """
     return ''.join([chr(i) for i in [int(b, 2) for b in s.split(' ')]])
+
+
+# 读取文件内容并打印
+def readFile(file_name):
+    """
+    文件的全路径
+    :param file_name:
+    :return:
+    """
+    content = ''
+    file_open = open(file_name, 'r', encoding='utf-8')  # r 代表read
+    # for eachLine in file_open:
+    #     content += eachLine
+    content = file_open.read()
+    file_open.close()
+    return content

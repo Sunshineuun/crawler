@@ -137,25 +137,14 @@ class Crawler(object):
         }
 
         # 驱动器地址
-        executable_path = 'C:\\chromedriver.exe'
+        self.executable_path = 'C:\\chromedriver.exe'
 
-        options = webdriver.ChromeOptions()
-        prefs = {"profile.managed_default_content_settings.images": 2}
-
-        options.add_experimental_option("prefs", prefs)
-        # options.add_argument('--proxy-server=http://61.135.217.7:80')
-
-        desired_capabilities = DesiredCapabilities.CHROME
-        desired_capabilities['loggingPrefs'] = {'performance': 'ALL'}
-
-        self.driver = webdriver.Chrome(executable_path=executable_path,
-                                       chrome_options=options,
-                                       desired_capabilities=desired_capabilities)
+        self.driver = self.new_driver()
 
         # self.driver.implicitly_wait(2)
 
         # 代理设置
-        proxy = request.ProxyHandler({'http': '122.114.31.177:808'})  # 设置proxy
+        # proxy = request.ProxyHandler({'http': '122.114.31.177:808'})  # 设置proxy
         # opener = request.build_opener(proxy)  # 挂载opener
         self.opener = request.build_opener(request.HTTPHandler)
         self.opener.addheaders = [get_user_agent()]
@@ -223,6 +212,7 @@ class Crawler(object):
         #     关闭远程连接
         #     logger.error(traceback.format_exc())
         except BaseException as exception:
+            print(exception)
             error_info = {
                 'url': url,
                 'type': str(exception),
@@ -257,6 +247,45 @@ class Crawler(object):
 
         return domain + '?' + str(parse.urlencode(format_params).encode('utf-8').decode('utf-8'))
 
+    def set_proxy(self, p):
+        print('退出')
+        self.driver.quit()
+        self.driver = self.new_driver(p)
+        # 代理设置
+        proxy = request.ProxyHandler({p['type']: p['ip'] + ':' + p['port']})  # 设置proxy
+        # opener = request.build_opener(proxy)  # 挂载opener
+        self.opener = request.build_opener(request.HTTPHandler, proxy)
+        self.opener.addheaders = [get_user_agent()]
+        request.install_opener(opener=self.opener)
+
+    def new_driver(self, p=None):
+        options = webdriver.ChromeOptions()
+        prefs = {"profile.managed_default_content_settings.images": 2}
+
+        options.add_experimental_option("prefs", prefs)
+
+        if p:
+            options.add_argument(
+                '--proxy-server={http}://{ip}:{port}'.format(http=p['type'], ip=p['ip'], port=p['port']))
+
+        desired_capabilities = DesiredCapabilities.CHROME
+        desired_capabilities['loggingPrefs'] = {'performance': 'ALL'}
+
+        return webdriver.Chrome(executable_path=self.executable_path,
+                                chrome_options=options,
+                                desired_capabilities=desired_capabilities,
+                                service_log_path='D:/Temp/chromdriver.log')
+
 
 if __name__ == '__main__':
-    get_user_agent()
+    c = Crawler()
+    c.set_proxy({
+        'type': 'HTTP',
+        'ip': '115.223.204.250',
+        'port': '9000'
+    })
+    check_url = 'https://bbs.yaozh.com/template/eis_c_m1/img/agree.gif'
+    c.driver_get_url(check_url)
+    c.request_get_url(check_url)
+    print(1)
+
