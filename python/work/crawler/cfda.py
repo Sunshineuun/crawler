@@ -72,13 +72,18 @@ class cfda(BaseCrawler):
 
     def __init__(self, ip='127.0.0.1'):
         super().__init__(ip)
-        self.name = 'cfda'
         self.pici = 0
         self.url_index = 0
 
         self.oralce_cursor = OralceCursor()
 
-    def init_url(self):
+    def _get_cn_name(self):
+        return 'CFDA'
+
+    def _get_name(self):
+        return 'cfda1'
+
+    def _init_url(self):
         """
         http://app1.sfda.gov.cn/datasearch/face3/search.jsp?tableId={code}&curstart={page}
         code:25代表国产药品，36代表进口药品
