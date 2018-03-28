@@ -7,6 +7,7 @@ url资源池
 import datetime
 import queue
 
+
 class URLPool(object):
     """
     用MongoDB存储url
