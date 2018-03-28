@@ -3,6 +3,7 @@
 # qiushengming-minnie
 
 import datetime
+import time
 import re
 
 from bs4 import BeautifulSoup
@@ -64,10 +65,11 @@ UPDATE KBMS_DFSX_KNOWLEDGE_UP SET IS_ENABLE = '5' WHERE IS_ENABLE = '1'
 class cfda(BaseCrawler):
     """
     国家食品药品监督管理总局
-    """
-    # TODO
-    """
-        1.数据对比问题
+    2018-3-27
+        1.请求错误的url进行标记，因为发现有部分数据请求为空
+        2.
+
+    需要提交
     """
 
     def __init__(self, ip='127.0.0.1'):
@@ -81,7 +83,7 @@ class cfda(BaseCrawler):
         return 'CFDA'
 
     def _get_name(self):
-        return 'cfda1'
+        return 'cfda'
 
     def _init_url(self):
         """
@@ -120,7 +122,7 @@ class cfda(BaseCrawler):
 
     def get_cookie(self):
         cookie = ''
-        for dic in self._crawler.get_driver().get_cookies():
+        for dic in self._crawler.driver.get_cookies():
             cookie += dic['name'] + '=' + dic['value'] + ';'
         return cookie
 
@@ -132,8 +134,6 @@ class cfda(BaseCrawler):
         while not self._urlpool.empty():
             d1 = datetime.datetime.now()
             params = self._urlpool.get()
-            # html_b = self.crawler.request_get_url(params['url'], header={'Cookie': self.get_cookie()})
-            # html = html_b.decode('utf-8')
             html = self._crawler.driver_get_url(params['url'])
             soup = BeautifulSoup(html, 'html.parser')
             if params['url'].__contains__('search.jsp'):
@@ -167,21 +167,24 @@ class cfda(BaseCrawler):
                     self._urlpool.save_url(url_list)
             elif params['url'].__contains__('content.jsp'):
                 tbody = soup.find_all('tbody')
-                # if tbody:
-                #     html = self.crawler.driver_get_url(params['url'])
-                #
-                # soup = BeautifulSoup(html)
-                # tbody = soup.find_all('tbody')
                 if tbody:
                     params['html'] = html
                     # 保存html数据
-                    self._html_cursor.insert(params)
+                    self._html_cursor.save(params)
                     # 更新数据
                     self._urlpool.update_success_url(params['url'])
             else:
                 logger.error('异常情况：' + params['url'])
 
             d2 = datetime.datetime.now()
+            date = (d2 - d1).total_seconds()
+            # 说明响应变慢了，等等，给服务器减压。
+            if date > 5:
+                time.sleep(250)
+            # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
+            # if date < 0.3:
+            #     params['isenable'] = '无效地址，空页面'
+            #     self._urlpool.update({'_id': params['_id']}, params)
             logger.info('耗时：' + str((d2 - d1).total_seconds()))
 
     def parser(self):
@@ -198,14 +201,21 @@ class cfda(BaseCrawler):
             tr_tags = soup.find_all('tr')[1:-3]
             row = {
                 '_id': data['_id'],
-                'url': data['url']
+                'url': data['url'],
+                'text': data['text']
             }
             for tr in tr_tags:
                 text = tr.text.split('\n')
                 if len(text) < 3:
                     continue
                 row[text[1]] = text[2]
-            rows.append(row)
+
+            # 数据有效加入，数据无效进行更新
+            if data['text'].__contains__(row['药品本位码']):
+                rows.append(row)
+            else:
+                print(data['url'])
+                self._urlpool.update({'url': data['url']}, {'isenable': '1'})
 
         self._data_cursor.insert(rows)
         logger.info('结束')
@@ -228,10 +238,13 @@ class cfda(BaseCrawler):
             'PRODUCTION_UNIT': ['生产单位', '生产厂商（英文）'],
             'CODE': ['药品本位码备注']
         }
-        params1 = ['ID', 'PRODUCT_NAME', 'TRAD_NAME', 'SPEC', 'ZC_FORM', 'PERMIT_NO', 'PRODUCTION_UNIT', 'CODE']
+        params1 = ['ID', 'PRODUCT_NAME', 'TRAD_NAME', 'SPEC', 'ZC_FORM', 'PERMIT_NO',
+                   'PRODUCTION_UNIT', 'CODE']
 
-        ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', '化学药品', '医用气体', '医用气体(气态氧)', '其他', '气态', '液态和气态', '非剂型', '气态 液态',
-                 '体外诊断试剂', '鼻用制剂', '液态气体', '非制剂,其他:氧', '液态', '氧(气态、液态)', '液体	', '气剂', '液态氧', '气体、液态', '医用氧(液态)',
+        ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', '化学药品', '医用气体', '医用气体(气态氧)', '其他', '气态',
+                 '液态和气态', '非剂型', '气态 液态',
+                 '体外诊断试剂', '鼻用制剂', '液态气体', '非制剂,其他:氧', '液态', '氧(气态、液态)', '液体	', '气剂', '液态氧',
+                 '气体、液态', '医用氧(液态)',
                  '有效成份', '液态空气', '吸入性气体', '氧', '医用氧气', '氧气', '医用氧(气态、液态)', '呼吸', '其他:医用氧(气态)']
         PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医用氧气', '医用氧(液态)']
 
@@ -277,8 +290,31 @@ class cfda(BaseCrawler):
         self.oralce_cursor.executeSQL(insert_sql)
         logger.info('数据库存储结束')
 
+    def parser2(self):
+        """
+        比较原始数据列表上的本位码，是不是跟解析后的本位码一样
+        1. 按照URL查取data，url中查找对应的数据
+        2. 进行比较
+        3. 不相同，那么删除html，更新url.isenable == 1
+        :return:
+        """
+        index = 0
+        for data in self._data_cursor().find():
+            index += 1
+            if index < 0:
+                continue
+            if index % 1000 == 0:
+                print(index)
+            if 'text' not in data:
+                continue
+
+            if ('药品本位码' not in data) or \
+                    (data and not str(data['text']).__contains__(data['药品本位码'])):
+                self._urlpool.update({'_id': data['_id']}, {'isenable': '1'})
+                self._html_cursor.delete_one({'url': data['url']})
+
 
 if __name__ == '__main__':
     z = cfda('192.168.16.113')
+    z.startup()
     # z.parser()
-    z.to_oracle()
