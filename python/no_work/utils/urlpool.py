@@ -7,12 +7,14 @@ url资源池
 import datetime
 import queue
 
-
 class URLPool(object):
     """
     用MongoDB存储url
     2018-3-19
         加速URL的初始化，MongoDB批量插入
+    2018-3-27
+        更新的时候把查询条件的字段剔除掉
+    需要提交
     """
 
     def __init__(self, mongo, name):
@@ -83,14 +85,21 @@ class URLPool(object):
                     p['isenable'] = '1'
                     p['insert_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         elif type(params) == dict:
-                params['isenable'] = '1'
-                params['insert_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            params['isenable'] = '1'
+            params['insert_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.cursor.insert(params)
 
     def find_all_count(self):
         return self.cursor.find().count()
 
     def update(self, query, update):
+        if type(query) is not dict \
+                and type(update) is not dict:
+            raise TypeError
+
+        for k, v in query.items():
+            if k in update:
+                update.pop(k)
         self.cursor.update(query, update)
 
     def update_success_url(self, url):
