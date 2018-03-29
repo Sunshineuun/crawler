@@ -9,7 +9,6 @@ import nltk
 from urllib import request
 from bs4 import BeautifulSoup
 from nltk.corpus import stopwords
-from nltk.corpus import wordnet
 from nltk.book import text2
 from nltk import *
 
