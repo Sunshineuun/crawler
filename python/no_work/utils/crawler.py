@@ -4,15 +4,17 @@
 import json
 import random
 import traceback
-from urllib import request, parse
 
 import pymongo
+
+from urllib import request, parse
+
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-from minnie.crawler.common.Utils import getNowDate
 from python.no_work.utils import mlogger
+from python.no_work.utils.common import getNowDate
 
 logger = mlogger.get_defalut_logger('crawler.log', 'crawler')
 USER_AGENT = [
