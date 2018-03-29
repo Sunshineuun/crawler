@@ -3,8 +3,10 @@
 # qiushengming-minnie
 
 import datetime
+import threading
 import time
 import re
+from queue import Queue
 
 from bs4 import BeautifulSoup
 
@@ -13,8 +15,8 @@ from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils import mlogger
 from python.no_work.utils.oracle import OralceCursor
 
+IS_OK = False
 logger = mlogger.get_defalut_logger('cfda.log', 'cfda')
-
 insert_sql = """
 SELECT *
 FROM (
@@ -56,7 +58,6 @@ WHERE PRODUCT_NAME LIKE '#%'
       OR PRODUCTION_UNIT LIKE '#%'
       OR CLINICAL_STATE LIKE '#%'
 """
-
 update_sql = """
 UPDATE KBMS_DFSX_KNOWLEDGE_UP SET IS_ENABLE = '5' WHERE IS_ENABLE = '1'
 """
@@ -179,12 +180,11 @@ class cfda(BaseCrawler):
             d2 = datetime.datetime.now()
             date = (d2 - d1).total_seconds()
             # 说明响应变慢了，等等，给服务器减压。
-            if date > 5:
+            if date > 10:
                 time.sleep(250)
             # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
-            # if date < 0.3:
-            #     params['isenable'] = '无效地址，空页面'
-            #     self._urlpool.update({'_id': params['_id']}, params)
+            if date < 0.3:
+                time.sleep(250)
             logger.info('耗时：' + str((d2 - d1).total_seconds()))
 
     def parser(self):
@@ -313,8 +313,105 @@ class cfda(BaseCrawler):
                 self._urlpool.update({'_id': data['_id']}, {'isenable': '1'})
                 self._html_cursor.delete_one({'url': data['url']})
 
+    def startup_parser(self):
+        queue = Queue()
+        index = [[0, 65000], [65001, 130000], [13001, 200000]]
+        for i, v in enumerate(index):
+            get_data = GetData(i, queue, self.get_html_cursor(), v)
+            get_data.start()
+            parser = Parser(i, queue, self.get_data_cursor(), self.get_urlpool())
+            parser.start()
+
+        while queue.empty():
+            print(queue.qsize())
+            time.sleep(500)
+
+        IS_OK = True
+
+
+class Parser(threading.Thread):
+    def __init__(self, thread_name, _queue, cursor, urlpool):
+        threading.Thread.__init__(self)
+        self._thread_name = '解析线程-' + str(thread_name) + ' -- '
+        self.__queue = _queue  # _queue
+        self.__cursor = cursor
+        self.__urlpool = urlpool
+        self.__count = 1
+
+    def run(self):
+        """
+        :return:
+        """
+        rows = []
+        while True:
+            if self.__queue.empty():
+                time.sleep(30)
+            data = self.__queue.get()
+            row = {
+                '_id': data['_id'],
+                'url': data['url'],
+                'text': data['text']
+            }
+
+            self.__count += 1
+            if self.__count % 1000 == 0:
+                logger.info(self._thread_name + str(self.__count))
+                self.__cursor.insert(rows)
+                rows.clear()
+
+            soup = BeautifulSoup(data['html'], 'html.parser')
+            tr_tags = soup.find_all('tr')[1:-3]
+
+            for tr in tr_tags:
+                text = tr.text.split('\n')
+                if len(text) < 3:
+                    continue
+                row[text[1]] = text[2]
+
+            # 数据有效加入，数据无效进行更新
+            if data['text'].__contains__(row['药品本位码']):
+                rows.append(row)
+            else:
+                print(data['url'])
+                # self.__urlpool.update({'url': data['url']}, {'isenable': '1'})
+
+            if IS_OK:
+                break
+
+        self.__cursor.insert(rows)
+
+
+class GetData(threading.Thread):
+    def __init__(self, thread_name, queue, cursor, index):
+        """
+        :param queue: 存储队列
+        :param cursor:  数据获取游标
+        :param index: 数据获取起始结束为止
+        """
+        super().__init__()
+        self._thread_name = '取数据线程-' + str(thread_name) + ' -- '
+        self.__queue = queue
+        self.__cursor = cursor
+        self.__start_index = int(index[0])
+        self.__end_index = int(index[1])
+        self.__count = 1
+
+    def run(self):
+        query = {
+            '_id': {
+                '$gt': self.__start_index,
+                '$lt': self.__end_index
+            }
+        }
+        for data in self.__cursor.find(query):
+            self.__count += 1
+            if self.__count % 10000 == 0:
+                logger.info(self._thread_name + str(self.__count))
+            self.__queue.put(data)
+
 
 if __name__ == '__main__':
-    z = cfda('192.168.16.113')
-    z.startup()
-    # z.parser()
+    z = cfda('192.168.5.94')
+    # z.startup_parser()
+    z.parser()
+    z.to_oracle()

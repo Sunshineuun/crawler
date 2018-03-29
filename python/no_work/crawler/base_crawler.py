@@ -20,13 +20,22 @@ class BaseCrawler(object):
             raise ValueError
 
         self._mongo = MongodbCursor(ip)
-        self._urlpool = URLPool(self._mongo, self.__name)
+        self._urlpool = self.get_urlpool()
         self._crawler = Crawler()
 
-        self._html_cursor = self._mongo.get_cursor(self.__name, 'html')
-        self._data_cursor = self._mongo.get_cursor(self.__name, 'data')
+        self._html_cursor = self.get_html_cursor()
+        self._data_cursor = self.get_data_cursor()
 
         self._init_url()
+
+    def get_html_cursor(self):
+        return self._mongo.get_cursor(self.__name, 'html')
+
+    def get_data_cursor(self):
+        return self._mongo.get_cursor(self.__name, 'data')
+
+    def get_urlpool(self):
+        return URLPool(self._mongo, self.__name)
 
     @abstractmethod
     def _init_url(self):

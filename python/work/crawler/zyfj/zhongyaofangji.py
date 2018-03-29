@@ -138,7 +138,7 @@ class zhongyaofangji(BaseCrawler):
         except BaseException:
             pass
         finally:
-            self._crawler.get_driver().stop_client()
+            self._crawler.driver.stop_client()
 
 
 if __name__ == '__main__':

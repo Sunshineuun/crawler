@@ -79,7 +79,7 @@ class LianJia(BaseCrawler):
                 key = ['unitPrice', 'totalPrice', 'taxfree', 'subway', 'followInfo', 'positionInfo', 'houseInfo',
                        'title']
                 for k in key:
-                    params[k] = li.find('div', class_='k').text
+                    params[k] = li.find('div', class_=k).text
 
                 params['houseInfo1'] = li.find('div', class_='houseInfo').a.text
                 params['positionInfo1'] = li.find('div', class_='positionInfo').a.text
