@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="6f37b152-ab56-4e80-84ad-eed18103932f" name="Default" comment="脚本" />
+    <list default="true" id="6f37b152-ab56-4e80-84ad-eed18103932f" name="Default" comment="脚本">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -38,58 +40,105 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
-      <file leaf-file-name="cnki_TCM.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/minnie/crawler/chinese_medicine/cnki_TCM.py">
+      <file leaf-file-name="urlpool.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/python/no_work/utils/urlpool.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="393">
-              <caret line="174" column="50" lean-forward="false" selection-start-line="174" selection-start-column="50" selection-end-line="174" selection-end-column="50" />
+            <state relative-caret-position="783">
+              <caret line="113" column="14" lean-forward="false" selection-start-line="113" selection-start-column="14" selection-end-line="113" selection-end-column="14" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="base_crawler.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/python/no_work/crawler/base_crawler.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="420">
+              <caret line="57" column="22" lean-forward="false" selection-start-line="57" selection-start-column="22" selection-end-line="57" selection-end-column="22" />
               <folding>
-                <element signature="e#528#1150#0" expanded="false" />
-                <element signature="e#1195#1407#0" expanded="false" />
-                <element signature="e#1434#1790#1" expanded="false" />
-                <element signature="e#1824#1846#0" expanded="false" />
-                <element signature="e#3045#4186#0" expanded="false" />
-                <element signature="e#4220#4394#0" expanded="false" />
+                <element signature="e#1059#1063#0" expanded="false" />
+                <element signature="e#1118#1207#0" expanded="false" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="YAOZHI_ZYFZ.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/minnie/crawler/chinese_medicine/YAOZHI_ZYFZ.py">
+      <file leaf-file-name="realty.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/python/no_work/crawler/realty.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2508">
-              <caret line="105" column="0" lean-forward="false" selection-start-line="105" selection-start-column="0" selection-end-line="105" selection-end-column="0" />
+            <state relative-caret-position="618">
+              <caret line="93" column="0" lean-forward="false" selection-start-line="93" selection-start-column="0" selection-end-line="93" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="common.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/python/no_work/utils/common.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="354">
+              <caret line="70" column="19" lean-forward="false" selection-start-line="70" selection-start-column="19" selection-end-line="70" selection-end-column="19" />
               <folding>
                 <element signature="e#62#77#0" expanded="true" />
-                <element signature="e#1487#2423#0" expanded="false" />
-                <element signature="e#3446#4005#0" expanded="false" />
-                <element signature="e#4049#4539#0" expanded="false" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="URLPool.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/minnie/crawler/common/URLPool.py">
+      <file leaf-file-name="mfile.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/python/no_work/utils/mfile.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2310">
-              <caret line="77" column="33" lean-forward="false" selection-start-line="77" selection-start-column="33" selection-end-line="77" selection-end-column="33" />
+            <state relative-caret-position="231">
+              <caret line="7" column="32" lean-forward="false" selection-start-line="7" selection-start-column="32" selection-end-line="7" selection-end-column="32" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="crawler.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/python/no_work/utils/crawler.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="24">
+              <caret line="282" column="69" lean-forward="false" selection-start-line="282" selection-start-column="69" selection-end-line="282" selection-end-column="69" />
               <folding>
-                <element signature="e#1511#1638#0" expanded="false" />
-                <element signature="e#1891#2036#0" expanded="false" />
+                <element signature="e#490#7701#0" expanded="false" />
+                <element signature="e#8006#8824#0" expanded="false" />
+                <element signature="e#8853#8911#0" expanded="false" />
+                <element signature="e#9795#9860#0" expanded="false" />
+                <element signature="e#9919#10176#0" expanded="false" />
+                <element signature="e#10383#11751#0" expanded="false" />
+                <element signature="e#11804#12316#0" expanded="false" />
+                <element signature="e#13903#13952#0" expanded="false" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Crawler.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/minnie/crawler/common/Crawler.py">
+      <file leaf-file-name="excel.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/python/no_work/utils/excel.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1584">
-              <caret line="52" column="54" lean-forward="false" selection-start-line="52" selection-start-column="54" selection-end-line="52" selection-end-column="54" />
+            <state relative-caret-position="618">
+              <caret line="131" column="0" lean-forward="false" selection-start-line="131" selection-start-column="0" selection-end-line="131" selection-end-column="0" />
               <folding>
-                <element signature="e#1868#2822#0" expanded="false" />
+                <element signature="e#1284#1660#0" expanded="false" />
+                <element signature="e#1720#2185#0" expanded="false" />
+                <element signature="e#2229#2331#0" expanded="false" />
+                <element signature="e#2383#2701#0" expanded="false" />
+                <element signature="e#2737#3001#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="oracle.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/python/no_work/utils/oracle.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="618">
+              <caret line="97" column="0" lean-forward="false" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
+              <folding>
+                <marker date="1522290228490" expanded="true" signature="585:603" ph="SELECT 1 FRO... dual" />
+                <marker date="1522290228490" expanded="true" signature="2245:2272" ph="SELECT * FRO... DXY_DRUG_INFO" />
+                <marker date="1522290228490" expanded="true" signature="2387:2721" ph="INSERT INTO DXY_DRUG_INFO... " />
               </folding>
             </state>
           </provider>
@@ -158,10 +207,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/common/minnie_logger.py" />
-        <option value="$PROJECT_DIR$/minnie.common/oracle_dao.py" />
-        <option value="$PROJECT_DIR$/minnie.common/moracle.py" />
-        <option value="$PROJECT_DIR$/minnie/crawler/CFDA/CFDAGUI.py" />
         <option value="$PROJECT_DIR$/SQL/天天基金脚本.sql" />
         <option value="$PROJECT_DIR$/minnie/crawler/TTFund/DFStock.py" />
         <option value="$PROJECT_DIR$/minnie/crawler/TTFund/TTFund.py" />
@@ -198,11 +243,21 @@
         <option value="$APPLICATION_CONFIG_DIR$/consoles/db/cf5d1ce9-6bd0-427b-9031-3ce3221d6f37/console.sql" />
         <option value="$PROJECT_DIR$/temp.txt" />
         <option value="$PROJECT_DIR$/minnie/crawler/common/MongoDB.py" />
-        <option value="$PROJECT_DIR$/minnie/crawler/common/Utils.py" />
         <option value="$PROJECT_DIR$/minnie/crawler/common/Crawler.py" />
         <option value="$PROJECT_DIR$/minnie/crawler/common/URLPool.py" />
         <option value="$PROJECT_DIR$/minnie/crawler/chinese_medicine/YAOZHI_ZYFZ.py" />
         <option value="$PROJECT_DIR$/minnie/crawler/chinese_medicine/cnki_TCM.py" />
+        <option value="$PROJECT_DIR$/python/work/crawler/yaozh.py" />
+        <option value="$PROJECT_DIR$/python/work/crawler/cfda.py" />
+        <option value="$PROJECT_DIR$/python/work/crawler/zyfj/zhongyaofangji.py" />
+        <option value="$PROJECT_DIR$/python/no_work/crawler/base_crawler.py" />
+        <option value="$PROJECT_DIR$/python/no_work/crawler/realty.py" />
+        <option value="$PROJECT_DIR$/python/no_work/utils/crawler.py" />
+        <option value="$PROJECT_DIR$/python/no_work/utils/excel.py" />
+        <option value="$PROJECT_DIR$/python/no_work/utils/oracle.py" />
+        <option value="$PROJECT_DIR$/python/no_work/utils/urlpool.py" />
+        <option value="$PROJECT_DIR$/minnie/crawler/common/Utils.py" />
+        <option value="$PROJECT_DIR$/python/no_work/utils/common.py" />
       </list>
     </option>
   </component>
@@ -212,11 +267,11 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
-    <option name="x" value="2915" />
-    <option name="y" value="70" />
-    <option name="width" value="1305" />
-    <option name="height" value="935" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="-9" />
+    <option name="y" value="-9" />
+    <option name="width" value="1938" />
+    <option name="height" value="1098" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -236,44 +291,29 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
             <path>
-              <item name="python_analytical_finance" type="b2602c69:ProjectViewProjectNode" />
-              <item name="python_analytical_finance" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="python_analytical_finance" type="b2602c69:ProjectViewProjectNode" />
-              <item name="python_analytical_finance" type="462c0819:PsiDirectoryNode" />
-              <item name="minnie" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="python_analytical_finance" type="b2602c69:ProjectViewProjectNode" />
-              <item name="python_analytical_finance" type="462c0819:PsiDirectoryNode" />
-              <item name="minnie" type="462c0819:PsiDirectoryNode" />
+              <item name="crawler" type="b2602c69:ProjectViewProjectNode" />
               <item name="crawler" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="python_analytical_finance" type="b2602c69:ProjectViewProjectNode" />
-              <item name="python_analytical_finance" type="462c0819:PsiDirectoryNode" />
-              <item name="minnie" type="462c0819:PsiDirectoryNode" />
+              <item name="crawler" type="b2602c69:ProjectViewProjectNode" />
               <item name="crawler" type="462c0819:PsiDirectoryNode" />
-              <item name="chinese_medicine" type="462c0819:PsiDirectoryNode" />
+              <item name="minnie" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="python_analytical_finance" type="b2602c69:ProjectViewProjectNode" />
-              <item name="python_analytical_finance" type="462c0819:PsiDirectoryNode" />
-              <item name="minnie" type="462c0819:PsiDirectoryNode" />
+              <item name="crawler" type="b2602c69:ProjectViewProjectNode" />
               <item name="crawler" type="462c0819:PsiDirectoryNode" />
-              <item name="common" type="462c0819:PsiDirectoryNode" />
+              <item name="python" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -284,14 +324,15 @@
     <property name="last_opened_file_path" value="D:/MinMin/Winning/2018年度/第一季度/01.规则引擎v3梳理/知识维护V1.1" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="D:\JetBrains\Pycharm\python_analytical_finance\minnie\common" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\JetBrains\Pycharm\crawler\crawler\python\no_work\utils" />
       <recent name="D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler\pharmacy_ipmph_com" />
       <recent name="D:\JetBrains\Pycharm\python_analytical_finance\minnie\common" />
       <recent name="D:\JetBrains\Pycharm\python_analytical_finance\minnie\crawler" />
       <recent name="D:\JetBrains\Pycharm\python_analytical_finance\common" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\JetBrains\Pycharm\python_analytical_finance\minnie\common" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -530,27 +571,33 @@
       <option name="project" value="LOCAL" />
       <updated>1520762104168</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="init">
+      <created>1522290612885</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1522290612886</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="2391" y="-9" width="2018" height="1143" extended-state="7" />
-    <editor active="true" />
+    <frame x="-9" y="-9" width="1938" height="1098" extended-state="6" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30669332" sideWeight="0.503125" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2541841" sideWeight="0.503125" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24476987" sideWeight="0.49791667" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2571744" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24476987" sideWeight="0.49791667" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Mongo Explorer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1895" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Mongo Explorer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1265625" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3294979" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2535" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16979167" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Statistic" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Tail" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.40104166" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2656904" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -626,7 +673,6 @@
     <MESSAGE value="python访问oracle数据库基本工具；游标形式。" />
     <MESSAGE value="MongoDB初步使用" />
     <MESSAGE value="日志模块" />
-    <MESSAGE value="init" />
     <MESSAGE value="天天基金，东方财富定时任务" />
     <MESSAGE value="修改oracle数据源" />
     <MESSAGE value="调整无效的导入包" />
@@ -636,7 +682,8 @@
     <MESSAGE value="1.1版本代码修改提交测试" />
     <MESSAGE value="建表脚本" />
     <MESSAGE value="药智网，中国知网" />
-    <option name="LAST_COMMIT_MESSAGE" value="药智网，中国知网" />
+    <MESSAGE value="init" />
+    <option name="LAST_COMMIT_MESSAGE" value="init" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -695,86 +742,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="das://table:/5fec429c/8cf5b5a7-a2d1-4d85-b56a-4d837f748b50/SPIDERS.QSM_JBK_JB" />
-    <entry file="file://$PROJECT_DIR$/../../Blog/blog/themes/next/layout/_scripts/commons.swig">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="264">
-          <caret line="8" column="62" lean-forward="false" selection-start-line="8" selection-start-column="62" selection-end-line="8" selection-end-column="62" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../Blog/blog/themes/next/layout/_third-party/comments/youyan.swig">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="6" column="36" lean-forward="true" selection-start-line="6" selection-start-column="36" selection-end-line="6" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../Blog/blog/_config.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="132">
-          <caret line="10" column="9" lean-forward="true" selection-start-line="10" selection-start-column="9" selection-end-line="10" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../Blog/blog/themes/next/languages/zh-Hans.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="23" column="5" lean-forward="false" selection-start-line="23" selection-start-column="5" selection-end-line="23" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../Blog/blog/themes/next/layout/_macro/post.swig">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="485">
-          <caret line="92" column="0" lean-forward="true" selection-start-line="92" selection-start-column="0" selection-end-line="92" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../Blog/blog/themes/next/_config.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="485">
-          <caret line="542" column="0" lean-forward="true" selection-start-line="542" selection-start-column="0" selection-end-line="542" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Desktop/paHTML.PY" />
-    <entry file="file://$USER_HOME$/Desktop/parseHTML.py" />
-    <entry file="file://$PROJECT_DIR$/minnie/crawler/CFDA/CFDAGUI.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="429">
-          <caret line="16" column="37" lean-forward="false" selection-start-line="16" selection-start-column="37" selection-end-line="16" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/common/deen.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="33">
-          <caret line="5" column="0" lean-forward="false" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/8cf5b5a7-a2d1-4d85-b56a-4d837f748b50/console.sql">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/temp/temp.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="333">
-          <caret line="70" column="63" lean-forward="true" selection-start-line="70" selection-start-column="63" selection-end-line="70" selection-end-column="63" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/crawler/pharmacy_ipmph_com/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="99">
-          <caret line="3" column="33" lean-forward="false" selection-start-line="3" selection-start-column="33" selection-end-line="3" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/minnie/crawler/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -783,13 +750,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/temp.json" />
-    <entry file="file://$PROJECT_DIR$/minnie/common/mfile.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="17" column="12" lean-forward="false" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Python36/Lib/urllib/parse.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -804,27 +764,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/common/mlogger.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="99">
-          <caret line="3" column="14" lean-forward="true" selection-start-line="3" selection-start-column="14" selection-end-line="3" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../20171026/crawler/dxy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-165">
-          <caret line="16" column="0" lean-forward="false" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../20171026/crawler/yzw.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="463">
-          <caret line="243" column="42" lean-forward="false" selection-start-line="243" selection-start-column="42" selection-end-line="243" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/minnie/common/mlogger.py" />
+    <entry file="file://$PROJECT_DIR$/../20171026/crawler/dxy.py" />
+    <entry file="file://$PROJECT_DIR$/../20171026/crawler/yzw.py" />
     <entry file="file://$PROJECT_DIR$/minnie/crawler/pharmacy_ipmph_com/en_data.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="231">
@@ -853,20 +795,8 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../20171026/util/minnie_torch.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-99">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../20171026/util/ocr.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="11" column="24" lean-forward="true" selection-start-line="11" selection-start-column="24" selection-end-line="11" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/../20171026/util/minnie_torch.py" />
+    <entry file="file://$PROJECT_DIR$/../20171026/util/ocr.py" />
     <entry file="file://$PROJECT_DIR$/minnie/common/mprasepdf.py" />
     <entry file="file://C:/Program Files/Python36/Lib/site-packages/bs4/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -919,16 +849,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/common/mmongodb.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="16" column="24" lean-forward="false" selection-start-line="16" selection-start-column="18" selection-end-line="16" selection-end-column="24" />
-          <folding>
-            <marker date="1520228427382" expanded="true" signature="397:438" ph="SELECT CODE,... CFDA_DRUG_HTML" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/minnie/common/mmongodb.py" />
     <entry file="file://C:/Program Files/Python36/Lib/site-packages/selenium/webdriver/remote/webdriver.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="49">
@@ -942,10 +863,6 @@
           <caret line="111" column="17" lean-forward="true" selection-start-line="111" selection-start-column="17" selection-end-line="111" selection-end-column="17" />
           <folding>
             <element signature="e#409#424#0" expanded="true" />
-            <marker date="1520511348633" expanded="true" signature="1653:1712" ph="INSERT INTO RWW_CONTENT... " />
-            <marker date="1520511348633" expanded="true" signature="3048:3543" ph="INSERT INTO RWW_INFO... " />
-            <marker date="1520511348633" expanded="true" signature="3609:3634" ph="SELECT * FRO... RWW_CONTENT" />
-            <marker date="1520511348633" expanded="true" signature="4205:4230" ph="SELECT * FRO... RWW_CONTENT" />
           </folding>
         </state>
       </provider>
@@ -972,35 +889,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/temp.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="132">
-          <caret line="4" column="63" lean-forward="true" selection-start-line="4" selection-start-column="63" selection-end-line="4" selection-end-column="63" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/MongoDB.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="49" column="0" lean-forward="false" selection-start-line="49" selection-start-column="0" selection-end-line="50" selection-end-column="36" />
-          <folding>
-            <element signature="e#213#228#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/temp.txt" />
+    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/MongoDB.py" />
     <entry file="file://C:/Program Files/Python36/Lib/site-packages/pymongo/collection.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-903">
           <caret line="1573" column="8" lean-forward="false" selection-start-line="1573" selection-start-column="8" selection-end-line="1573" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/Utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="462">
-          <caret line="29" column="22" lean-forward="true" selection-start-line="29" selection-start-column="12" selection-end-line="29" selection-end-column="22" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1011,52 +905,183 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/URLPool.py">
+    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/URLPool.py" />
+    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/Crawler.py" />
+    <entry file="file://$PROJECT_DIR$/minnie/crawler/chinese_medicine/YAOZHI_ZYFZ.py" />
+    <entry file="file://$PROJECT_DIR$/minnie/crawler/chinese_medicine/cnki_TCM.py" />
+    <entry file="file://$PROJECT_DIR$/python/work/crawler/yaozh.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2310">
-          <caret line="77" column="33" lean-forward="false" selection-start-line="77" selection-start-column="33" selection-end-line="77" selection-end-column="33" />
+        <state relative-caret-position="618">
+          <caret line="120" column="0" lean-forward="false" selection-start-line="120" selection-start-column="0" selection-end-line="120" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/python/work/crawler/cfda.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="618">
+          <caret line="417" column="0" lean-forward="false" selection-start-line="417" selection-start-column="0" selection-end-line="417" selection-end-column="0" />
           <folding>
-            <element signature="e#1511#1638#0" expanded="false" />
-            <element signature="e#1891#2036#0" expanded="false" />
+            <element signature="e#63#78#0" expanded="true" />
+            <element signature="e#456#2930#0" expanded="false" />
+            <element signature="e#2944#3023#0" expanded="false" />
+            <element signature="e#3055#3155#1" expanded="false" />
+            <element signature="e#3357#3370#0" expanded="false" />
+            <element signature="e#3405#3418#0" expanded="false" />
+            <element signature="e#3453#4515#0" expanded="false" />
+            <element signature="e#4551#4700#0" expanded="false" />
+            <element signature="e#4733#7180#0" expanded="false" />
+            <element signature="e#5201#6411#0" expanded="false" />
+            <element signature="e#7212#8272#0" expanded="false" />
+            <element signature="e#7394#8206#0" expanded="false" />
+            <element signature="e#11000#11696#0" expanded="false" />
+            <element signature="e#11000#11163#1" expanded="false" />
+            <element signature="e#12210#13682#0" expanded="false" />
+            <element signature="e#12276#12500#0" expanded="false" />
+            <element signature="e#12529#12561#1" expanded="false" />
+            <element signature="e#13219#13347#0" expanded="false" />
+            <element signature="e#13722#14539#0" expanded="false" />
+            <marker date="1522290301827" expanded="true" signature="460:2926" ph="SELECT * FRO... ID" />
+            <marker date="1522290301827" expanded="true" signature="478:2718" ph="SELECT T2.ID... KBMS_DFSX_KNOWLEDGE_UP_BAK" />
+            <marker date="1522290301827" expanded="true" signature="2948:3019" ph="UPDATE KBMS_... " />
+            <marker date="1522290301827" expanded="true" signature="8408:8582" ph="INSERT INTO KBMS_DFSX_KNOWLEDGE_UP_BAK... " />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/Crawler.py">
+    <entry file="file://$PROJECT_DIR$/python/work/crawler/zyfj/zhongyaofangji.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1584">
-          <caret line="52" column="54" lean-forward="false" selection-start-line="52" selection-start-column="54" selection-end-line="52" selection-end-column="54" />
+        <state relative-caret-position="288">
+          <caret line="137" column="29" lean-forward="true" selection-start-line="137" selection-start-column="29" selection-end-line="137" selection-end-column="29" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/python/no_work/crawler/base_crawler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="420">
+          <caret line="57" column="22" lean-forward="false" selection-start-line="57" selection-start-column="22" selection-end-line="57" selection-end-column="22" />
           <folding>
-            <element signature="e#1868#2822#0" expanded="false" />
+            <element signature="e#1059#1063#0" expanded="false" />
+            <element signature="e#1118#1207#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/crawler/chinese_medicine/YAOZHI_ZYFZ.py">
+    <entry file="file://$PROJECT_DIR$/python/no_work/crawler/realty.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2508">
-          <caret line="105" column="0" lean-forward="false" selection-start-line="105" selection-start-column="0" selection-end-line="105" selection-end-column="0" />
+        <state relative-caret-position="618">
+          <caret line="93" column="0" lean-forward="false" selection-start-line="93" selection-start-column="0" selection-end-line="93" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/python/no_work/utils/crawler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="24">
+          <caret line="282" column="69" lean-forward="false" selection-start-line="282" selection-start-column="69" selection-end-line="282" selection-end-column="69" />
+          <folding>
+            <element signature="e#490#7701#0" expanded="false" />
+            <element signature="e#8006#8824#0" expanded="false" />
+            <element signature="e#8853#8911#0" expanded="false" />
+            <element signature="e#9795#9860#0" expanded="false" />
+            <element signature="e#9919#10176#0" expanded="false" />
+            <element signature="e#10383#11751#0" expanded="false" />
+            <element signature="e#11804#12316#0" expanded="false" />
+            <element signature="e#13903#13952#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/python/no_work/utils/excel.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="618">
+          <caret line="131" column="0" lean-forward="false" selection-start-line="131" selection-start-column="0" selection-end-line="131" selection-end-column="0" />
+          <folding>
+            <element signature="e#1284#1660#0" expanded="false" />
+            <element signature="e#1720#2185#0" expanded="false" />
+            <element signature="e#2229#2331#0" expanded="false" />
+            <element signature="e#2383#2701#0" expanded="false" />
+            <element signature="e#2737#3001#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/python/no_work/utils/oracle.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="618">
+          <caret line="97" column="0" lean-forward="false" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
+          <folding>
+            <marker date="1522290228490" expanded="true" signature="585:603" ph="SELECT 1 FRO... dual" />
+            <marker date="1522290228490" expanded="true" signature="2245:2272" ph="SELECT * FRO... DXY_DRUG_INFO" />
+            <marker date="1522290228490" expanded="true" signature="2387:2721" ph="INSERT INTO DXY_DRUG_INFO... " />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/python/no_work/utils/urlpool.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="783">
+          <caret line="113" column="14" lean-forward="false" selection-start-line="113" selection-start-column="14" selection-end-line="113" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/Excel.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minnie/crawler/common/Utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="132">
+          <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/python/no_work/utils/common.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="354">
+          <caret line="70" column="19" lean-forward="false" selection-start-line="70" selection-start-column="19" selection-end-line="70" selection-end-column="19" />
           <folding>
             <element signature="e#62#77#0" expanded="true" />
-            <element signature="e#1487#2423#0" expanded="false" />
-            <element signature="e#3446#4005#0" expanded="false" />
-            <element signature="e#4049#4539#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/minnie/crawler/chinese_medicine/cnki_TCM.py">
+    <entry file="file://$PROJECT_DIR$/minnie/common/deen.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="393">
-          <caret line="174" column="50" lean-forward="false" selection-start-line="174" selection-start-column="50" selection-end-line="174" selection-end-column="50" />
-          <folding>
-            <element signature="e#528#1150#0" expanded="false" />
-            <element signature="e#1195#1407#0" expanded="false" />
-            <element signature="e#1434#1790#1" expanded="false" />
-            <element signature="e#1824#1846#0" expanded="false" />
-            <element signature="e#3045#4186#0" expanded="false" />
-            <element signature="e#4220#4394#0" expanded="false" />
-          </folding>
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/minnie/common/mfile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="66">
+          <caret line="17" column="12" lean-forward="false" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/python/no_work/utils/mfile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="231">
+          <caret line="7" column="32" lean-forward="false" selection-start-line="7" selection-start-column="32" selection-end-line="7" selection-end-column="32" />
+          <folding />
         </state>
       </provider>
     </entry>
