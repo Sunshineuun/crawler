@@ -217,11 +217,3 @@ class Crawler(object):
     def refresh(self):
         if self.driver:
             self.driver.refresh()
-
-
-if __name__ == '__main__':
-    c = Crawler()
-    check_url = 'https://bbs.yaozh.com/template/eis_c_m1/img/agree.gif'
-    c.driver_get_url(check_url)
-    c.request_get_url(check_url)
-    print(1)
