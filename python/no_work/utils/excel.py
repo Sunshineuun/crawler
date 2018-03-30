@@ -125,7 +125,52 @@ def get_title(_dbname, _tname):
     return title
 
 
-if __name__ == '__main__':
-    w = WriteXLSX(path='D://Temp//cfda.xlsx')
-    w.write('cfda', 'data')
-    pass
+def zyzydq_to_excel():
+    zyzydq = {
+        'title': {
+            '方剂名称': ['name', '方剂名', '方剂名称', ],
+            '方剂组成': ['方剂组成', '配方组成', '处方', '方剂配方', '组成', ],
+            '用法用量': ['用法用量', '方剂用法用量', '用法', '本方用法', ],
+            '功能主治': ['功效主治', '功能主治', '方剂主治', '主治', '功效', ]
+        },
+        'filename': '中医中药网_www.zyzydq.com_fangji_daquan.xlsx'
+    }
+    writexlsx = WriteXLSX(path='D://Temp//' + zyzydq['filename'])
+    writexlsx.write1('zyzydq', 'data', zyzydq['title'])
+
+
+def common_to_excel():
+    """
+    通用
+    :return:
+    """
+    # 'zhongyoo', 'zhongyaofangji','yaozh_zyfj',
+    db_names = ['zhongyoo', 'zhongyaofangji', 'yaozh_zyfj']
+    params = {
+        'zhongyoo': {
+            'title': ['【方剂名】', '【组成】', '【主治】',
+                      '【用法】', '【临床运用】', '【使用注意】', '【方剂出处】'],
+            'filename': '中药查询_www.zhongyoo.comfangji.xlsx'
+        },
+        'zhongyaofangji': {
+            'title': ['name', '【处方】', '【功能主治】', '【用法用量】', '【摘录】'],
+            'filename': '中医宝典_zhongyaofangji.com_all.html.xlsx'
+        },
+        'yaozh_zyfj': {
+            'title': {
+                '方名': ['方名'],
+                '功用大类': ['功用大类'],
+                '功用小类': ['功用小类'],
+                '处方': ['处方'],
+                '功用': ['功用'],
+                '主治': ['主治'],
+                '用法用量': ['用法用量']
+            },
+            'filename': '药智网_db.yaozh.com.xlsx'
+        }
+    }
+
+    for db_name in db_names:
+        temp = params[db_name]
+        writexlsx = WriteXLSX(path='D://Temp//' + temp['filename'])
+        writexlsx.write(db_name, 'data', temp['title'])
