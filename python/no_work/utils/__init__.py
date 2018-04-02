@@ -84,3 +84,6 @@ PROXY_IP = [
     # {'ip': '192.168.16.212', 'port': '6001', 'type': 'http'},
     {}
 ]
+
+MONGO_IP = '192.168.5.94'
+MONGO_PORT = 27017

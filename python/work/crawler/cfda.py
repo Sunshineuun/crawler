@@ -10,9 +10,9 @@ from queue import Queue
 
 from bs4 import BeautifulSoup
 
-from minnie.crawler.common.Utils import reg
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils import mlogger
+from python.no_work.utils.common import reg
 from python.no_work.utils.oracle import OralceCursor
 
 IS_OK = False
@@ -241,11 +241,14 @@ class cfda(BaseCrawler):
         params1 = ['ID', 'PRODUCT_NAME', 'TRAD_NAME', 'SPEC', 'ZC_FORM', 'PERMIT_NO',
                    'PRODUCTION_UNIT', 'CODE']
 
-        ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', '化学药品', '医用气体', '医用气体(气态氧)', '其他', '气态',
-                 '液态和气态', '非剂型', '气态 液态',
-                 '体外诊断试剂', '鼻用制剂', '液态气体', '非制剂,其他:氧', '液态', '氧(气态、液态)', '液体	', '气剂', '液态氧',
-                 '气体、液态', '医用氧(液态)',
-                 '有效成份', '液态空气', '吸入性气体', '氧', '医用氧气', '氧气', '医用氧(气态、液态)', '呼吸', '其他:医用氧(气态)']
+        ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', '化学药品', '医用气体', '医用气体(气态氧)',
+                 '其他', '气态', '液态和气态', '非剂型', '气态 液态', '体外诊断试剂', '鼻用制剂', '液态气体',
+                 '非制剂,其他:氧', '液态', '氧(气态、液态)', '液体	', '气剂', '液态氧', '气体、液态',
+                 '医用氧(液态)', '有效成份', '液态空气', '吸入性气体', '氧', '医用氧气', '氧气', '医用氧(气态、液态)',
+                 '呼吸', '其他:医用氧(气态)', '有效部位', '制剂中间体', '放免药盒', '药用辅料', '原料', '辅料',
+                 '特殊药用辅料', '颗粒剂(制剂中间体)', '制剂中间体水包衣颗粒', '制剂用中间体', '特殊辅料', '放射性密封源',
+                 '制剂:密封源', '放射性密封籽源', '药用辅料(供注射用)', '药用特殊辅料', '非制剂:辅料', '原料呀', '新辅料'
+                 ]
         PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医用氧气', '医用氧(液态)']
 
         # 循环记录
@@ -413,5 +416,5 @@ class GetData(threading.Thread):
 if __name__ == '__main__':
     z = cfda('192.168.5.94')
     # z.startup_parser()
-    z.parser()
+    # z.parser()
     z.to_oracle()

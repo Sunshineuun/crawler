@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 # qiushengming-minnie
-
+import datetime
 import random
 import re
 import time
@@ -10,11 +10,12 @@ from abc import abstractmethod, ABCMeta
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import NoSuchElementException
 
-from minnie.crawler.common.Utils import getNowDate
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils import mlogger
+from python.no_work.utils.common import getNowDate, reg
 
 logger = mlogger.get_defalut_logger('yaozhi.log', 'yaozhi')
+BASE_DOMAIN = 'https://db.yaozh.com'
 
 
 class yaozh(BaseCrawler):
@@ -42,7 +43,8 @@ class yaozh(BaseCrawler):
         pass
 
     def logout(self):
-        self._crawler.driver_get_url('https://www.yaozh.com/login/logout/?backurl=http%3A%2F%2Fwww.yaozh.com%2F')
+        self._crawler.driver_get_url(
+            'https://www.yaozh.com/login/logout/?backurl=http%3A%2F%2Fwww.yaozh.com%2F')
 
     def login(self):
         """
@@ -129,15 +131,24 @@ class yaozh(BaseCrawler):
             cookie += dic['name'] + '=' + dic['value'] + ';'
         return cookie
 
+    def save_html(self, h, p):
+        """
+
+        :param h: str
+        :param p: 字典
+        :return:
+        """
+        p['html'] = h
+        p['source'] = self._cn_name
+        p['create_date'] = getNowDate()
+        self._html_cursor.save(p)
+        self._urlpool.update_success_url(p['url'])
+
     def check_and_save(self, params, html):
         stat, msg = self.check_rule(html)
         logger.info(params['url'] + " - " + msg)
         if stat == 0:
-            params['html'] = html
-            params['source'] = self._cn_name
-            params['create_date'] = getNowDate()
-            self._html_cursor.save(params)
-            self._urlpool.update_success_url(params['url'])
+            self.save_html(html, params)
         elif stat == 1:
             params['isenable'] = msg
             self._urlpool.update({'_id': params['_id']}, params)
@@ -158,7 +169,8 @@ class yaozh(BaseCrawler):
         while not self._urlpool.empty():
             params = self._urlpool.get()
             html = None
-            html_b = self._crawler.request_get_url(params['url'], header={'Cookie': self.get_cookie()})
+            html_b = self._crawler.request_get_url(params['url'],
+                                                   header={'Cookie': self.get_cookie()})
 
             if not html_b:
                 for i in range(10):
@@ -374,18 +386,93 @@ class yaozh_monitored(yaozh):
         return '药智网-辅助与重点监控用药'
 
     def _init_url(self):
-        pass
+        """
+        按照时间查找
+        https://db.yaozh.com/monitored?p=1&pageSize=30&time=2016-01
+        :return:
+        """
+        if self._urlpool.find_all_count():
+            return
+
+        url = 'https://db.yaozh.com/monitored?p=1&pageSize=30&time={date}'
+        result_list = []
+        end = datetime.datetime.now()
+        year = 2015
+        month = 8
+        while True:
+            month += 1
+            if month > 12:
+                month = 1
+                year += 1
+            start = datetime.datetime(year, month, 1)
+            if start > end:
+                break
+            result_list.append({
+                'url': url.format(date=start.strftime('%Y-%m')),
+                'type': self._cn_name
+            })
+        self._urlpool.save_url(result_list)
+        logger.info('url初始结束！！！')
+
+    def startup(self):
+        city = ['青海省人民医院', '青海省青海大学附属医院',
+                '青海省青海红十字医院', '青海省省藏医院', '青海省省妇女儿童医院', '青海省省中医院',
+                '青海省西宁市第一人民医院']
+        while not self._urlpool.empty():
+            # 获取参数
+            params = self._urlpool.get()
+            # 加载页面
+            html = self._crawler.driver_get_url(params['url'])
+            # soup化
+            soup = BeautifulSoup(html, 'html.parser')
+            # 获取数据所在位置，进行验证确认。
+            tbody = soup.find_all('tbody')
+            # 校验：校验通过存储数据，继续；校验失败，跳过
+            if tbody and len(tbody) >= 1:
+                # 存储详情页链接，直接存储data中去
+                for tr in tbody[0].find_all('tr'):
+                    p = {
+                        'date': getNowDate(),
+                        'url_': params['url']
+                    }
+                    a = tr.find('a')
+                    if a['href'].__contains__(BASE_DOMAIN):
+                        url = a['href']
+                    else:
+                        url = BASE_DOMAIN + a['href']
+                    p['url'] = url
+                    p['药物名称'] = tr.find('th').text
+
+                    tds = tr.find_all('td')[0:5]
+                    p['药物剂型'] = tds[0].text
+                    p['地域机构'] = tds[1].text
+                    p['日期'] = tds[2].text
+                    p['监管级别'] = tds[3].text
+                    p['政策文件'] = tds[4].text
+
+                    self._data_cursor.insert(p)
+                    # self._urlpool.put(params)
+                self.save_html(h=html, p=params)
+            else:
+                self._urlpool.update({'url': params['url']}, {'isenable': '无效链接'})
+                continue
+
+            # 如果是第一页的话，需要检测是否还有下一页
+            page = soup.find('span', class_='total-nums')
+            if params['url'].__contains__('?p=1&') and page:
+                count = int(reg('[0-9]+', page.text))
+                url = params['url']
+                if count > 210:
+                    logger.info(url)
+                    page = 8
+                else:
+                    page = count // 30 + 2
+                # 获取page_count，整除+2，因为range[大于等于, 小于]，整除是向下取整
+                for i in range(2, page):
+                    self._urlpool.put({
+                        'url': url.replace('p=1', 'p=' + str(i)),
+                        'type': self._cn_name
+                    })
 
     def test(self):
         pass
-
-
-if __name__ == '__main__':
-    # y = yaozh_zy(ip='192.168.16.113')
-    # y.parser()
-
-    # y1 = yaozh_zyfj(ip='192.168.16.113')
-    # y1.parser()
-
-    y2 = yaozh_interaction(ip='192.168.16.113')
-    y2.parser()

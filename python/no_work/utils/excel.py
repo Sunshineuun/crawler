@@ -6,13 +6,15 @@ import xlwt
 import xlsxwriter
 import re
 
+from python.no_work.utils import MONGO_PORT, MONGO_IP
+
 
 class WriteXLS(object):
     def __init__(self):
         """"""
         self.workbook = xlwt.Workbook()  # 创建工作簿
         self.sheet1 = self.workbook.add_sheet(u'sheet1', cell_overwrite_ok=True)  # 创建sheet
-        self.mongo = pymongo.MongoClient('192.168.16.113', 27017)
+        self.mongo = pymongo.MongoClient(MONGO_IP, MONGO_PORT)
 
     def write(self, _dbname, _tname, path):
         title = self.get_title(_dbname, _tname)
@@ -50,7 +52,7 @@ class WriteXLSX(object):
         self.sheet = self.workbook.add_worksheet()
         self.sheet.set_column('A:Z', 35)
         # self.sheet.set_default_row(45)
-        self.mongo = pymongo.MongoClient('192.168.16.113', 27017)
+        self.mongo = pymongo.MongoClient(MONGO_IP, MONGO_PORT)
 
     def write(self, _dbname, _tname, title=None):
         if not title:
@@ -84,7 +86,7 @@ class WriteXLSX(object):
         title = []
         for data in cursor.find():
             for k, v in data.items():
-                if k not in title:
+                if k not in title and k != 'url':
                     title.append(k)
         return title
 
