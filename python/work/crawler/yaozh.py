@@ -235,7 +235,7 @@ class yaozh_zy(yaozh):
 
         url = 'https://db.yaozh.com/zhongyaocai/{code}.html'
         result_list = []
-        for i in range(1600):
+        for i in range(1700):
             result_list.append({
                 'url': url.format(code=i),
                 'type': self._cn_name
@@ -379,6 +379,14 @@ class yaozh_interaction(yaozh):
 
 # 重点用药
 class yaozh_monitored(yaozh):
+    """
+    比较难，将数据爬取全。
+    问题说明：
+        1.地址没有规律不能按照规则去查找
+        2.通过'发文时间'条件进行查找，但是查找的每个月份，可能数据超过210条，这样的话，超过部分就无法获取了。
+        3.通过增加特殊条件进行处理，需要人工介入
+    """
+
     def _get_name(self):
         return 'yaozh_monitored'
 
@@ -394,7 +402,6 @@ class yaozh_monitored(yaozh):
         if self._urlpool.find_all_count():
             return
 
-        url = 'https://db.yaozh.com/monitored?p=1&pageSize=30&time={date}'
         result_list = []
         end = datetime.datetime.now()
         year = 2015
@@ -408,21 +415,50 @@ class yaozh_monitored(yaozh):
             if start > end:
                 break
             result_list.append({
-                'url': url.format(date=start.strftime('%Y-%m')),
+                'url': 'https://db.yaozh.com/monitored?p=1&pageSize=30&time={date}'.format(
+                    date=start.strftime('%Y-%m')),
                 'type': self._cn_name
             })
+
+        # 2017-12 河南省单独查找
+        result_list.append({
+            'url': 'https://db.yaozh.com/monitored?p=1&area=河南省&pageSize=30&time=2017-12',
+            'type': self._cn_name
+        })
+
+        # 2016-12 分地市查找
+        city = ['青海红十字医院', '省中医院', '省藏医院', '省妇女儿童医院', '省心脑血管病医院', '省第四人民医院', '西宁市第一人民医院', '西宁市市第二人民医院',
+                '互助县人民医院']
+        for c in city:
+            result_list.append({
+                'url': 'https://db.yaozh.com/monitored?p=1&area={area}&pageSize=30&time=2018-12'.format(area=c),
+                'type': self._cn_name
+            })
+
+        # 2018-01 分地市查找
+        city = ['郑州市', '洛阳市', '开封市', '新乡市', '平顶山市', '南阳市', '安阳市', '焦作市', '驻马店市', '商丘市',
+                '濮阳市', '信阳市', '许昌市', '三门峡市', '漯河市', '周口市', '鹤壁市', '济源市', '河南省人民医院', '河南省胸科医院',
+                '河南省肿瘤医院', '阜外华中心血管病医院', '郑州大学第一附属医院', '郑州大学第二附属医院', '郑州大学第三附属医院',
+                '郑州大学第五附属医院', '河南省直属机关第二门诊部', '河南省直第三人民医院', '河南省省立医院', '河南省职工医院',
+                '河南科技大学第一附属医院', '河南医学高等专科学校附属医院', '新乡医学院第一附属医院', '河南省精神病医院（新乡医学院第二附属医院）',
+                '新乡医学院第三附属医院', '河南大学第一附属医院', '河南大学淮河医院', '黄河水利委员会黄河中心医院', '河南省老干部康复医院',
+                '兰考县', '固始县', '永城市', '新蔡县', '汝州市', '滑县', '邓州市', '长垣县', '鹿邑县']
+        for c in city:
+            result_list.append({
+                'url': 'https://db.yaozh.com/monitored?p=1&area={area}&pageSize=30&time=2018-01'.format(area=c),
+                'type': self._cn_name
+            })
+
         self._urlpool.save_url(result_list)
         logger.info('url初始结束！！！')
 
     def startup(self):
-        city = ['青海省人民医院', '青海省青海大学附属医院',
-                '青海省青海红十字医院', '青海省省藏医院', '青海省省妇女儿童医院', '青海省省中医院',
-                '青海省西宁市第一人民医院']
         while not self._urlpool.empty():
             # 获取参数
             params = self._urlpool.get()
             # 加载页面
             html = self._crawler.driver_get_url(params['url'])
+            time.sleep(1)
             # soup化
             soup = BeautifulSoup(html, 'html.parser')
             # 获取数据所在位置，进行验证确认。
@@ -454,7 +490,9 @@ class yaozh_monitored(yaozh):
                     # self._urlpool.put(params)
                 self.save_html(h=html, p=params)
             else:
-                self._urlpool.update({'url': params['url']}, {'isenable': '无效链接'})
+                params['isenable'] = '无效链接'
+                # self._urlpool.update({'_id': params['_id']}, params)
+                print(params['url'])
                 continue
 
             # 如果是第一页的话，需要检测是否还有下一页
