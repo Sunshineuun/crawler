@@ -7,6 +7,8 @@ url资源池
 import datetime
 import queue
 
+from python.no_work.utils.common import getNowDate
+
 
 class URLPool(object):
     """
@@ -36,7 +38,7 @@ class URLPool(object):
         """
         if self.cursor.find({'url': params['url']}).count() <= 0:
             params['isenable'] = '1'
-            params['insert_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            params['insert_date'] = getNowDate()
             self.cursor.insert(params)
             if not self.full():
                 self._queue.put(params)
@@ -84,10 +86,10 @@ class URLPool(object):
             for p in params:
                 if type(p) == dict:
                     p['isenable'] = '1'
-                    p['insert_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    p['insert_date'] = getNowDate()
         elif type(params) == dict:
             params['isenable'] = '1'
-            params['insert_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            params['insert_date'] = getNowDate()
         self.cursor.insert(params)
 
     def find_all_count(self):

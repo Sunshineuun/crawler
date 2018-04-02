@@ -10,35 +10,35 @@ from queue import Queue
 
 from bs4 import BeautifulSoup
 
-from minnie.crawler.common.Utils import reg
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils import mlogger
+from python.no_work.utils.common import reg
 from python.no_work.utils.oracle import OralceCursor
 
 IS_OK = False
 logger = mlogger.get_defalut_logger('cfda.log', 'cfda')
 insert_sql = """
+INSERT INTO KBMS_DFSX_KNOWLEDGE_UP (ID, PRODUCT_NAME, TRAD_NAME, SPEC, PERMIT_NO,
+                                    PRODUCTION_UNIT, CLINICAL_STATE, TYPE, IS_ENABLE, IS_SUBMIT)
 SELECT *
 FROM (
   SELECT
     T2.ID                                                                                                ID,
     DECODE(T1.PRODUCT_NAME, T2.PRODUCT_NAME, ('_' || T2.PRODUCT_NAME), NULL, ('_' || T2.PRODUCT_NAME),
            ('#_' || T1.PRODUCT_NAME))                                                                    PRODUCT_NAME,
-      T1.PRODUCT_NAME CFDA产品名称, T2.PRODUCT_NAME 药品列表产品名称,
+--       T1.PRODUCT_NAME CFDA产品名称, T2.PRODUCT_NAME 药品列表产品名称,
     DECODE(T1.TRAD_NAME, T2.TRAD_NAME, ('_' || T2.TRAD_NAME), NULL, ('_' || T2.TRAD_NAME),
            ('#_' || T1.TRAD_NAME))                                                                       TRAD_NAME,
-      T1.TRAD_NAME CFDA商品名称, T2.TRAD_NAME 药品列表商品名称,
+--       T1.TRAD_NAME CFDA商品名称, T2.TRAD_NAME 药品列表商品名称,
     DECODE(T1.SPEC, T2.SPEC, ('_' || T2.SPEC), NULL, ('_' || T2.SPEC), ('#_' || T1.SPEC))                SPEC,
-      T1.SPEC CFDA规格, T2.SPEC 药品列表规格,
-    DECODE(T1.ZC_FORM, T2.ZC_FORM, ('_' || T2.ZC_FORM), NULL, ('_' || T2.ZC_FORM), ('#_' || T1.ZC_FORM)) ZC_FORM,
-      T1.ZC_FORM CFDA注册剂型, T2.ZC_FORM 药品列表注册剂型,
+--       T1.SPEC CFDA规格, T2.SPEC 药品列表规格,
     DECODE(T1.PERMIT_NO, T2.PERMIT_NO, ('_' || T2.PERMIT_NO), NULL, ('_' || T2.PERMIT_NO),
            ('#_' || T1.PERMIT_NO))                                                                       PERMIT_NO,
-      T1.PERMIT_NO CFDA批准文号, T2.PERMIT_NO 药品列表批准文号,
+--       T1.PERMIT_NO CFDA批准文号, T2.PERMIT_NO 药品列表批准文号,
     DECODE(T1.PRODUCTION_UNIT, T2.PRODUCTION_UNIT, ('_' || T2.PRODUCTION_UNIT), NULL,
            ('_' || T2.PRODUCTION_UNIT), ('#_' ||
                                          T1.PRODUCTION_UNIT))                                            PRODUCTION_UNIT,
-      T1.PRODUCTION_UNIT CFDA生产单位, T2.PRODUCTION_UNIT 药品列表生产单位,
+--       T1.PRODUCTION_UNIT CFDA生产单位, T2.PRODUCTION_UNIT 药品列表生产单位,
     CASE WHEN T2.CLINICAL_STATE = '注销' AND T1.ID IS NOT NULL
       THEN '#_正常'
     WHEN T1.ID IS NOT NULL
@@ -46,14 +46,14 @@ FROM (
     ELSE '_注销' END                                                                                       CLINICAL_STATE,
     '1'                                                                                                  TYPE,
     '1'                                                                                                  IS_ENABLE,
-    '0'                                                                                                  IS_SUBMIT
+    '0'
+      IS_SUBMIT
   FROM KBMS_DFSX_KNOWLEDGE_UP_BAK T1
     RIGHT JOIN KBMS_DRUG_FROM_SX T2 ON T1.ID = T2.ID
   WHERE TYPE = '1')
 WHERE PRODUCT_NAME LIKE '#%'
       OR TRAD_NAME LIKE '#%'
       OR SPEC LIKE '#%'
-      OR ZC_FORM LIKE '#%'
       OR PERMIT_NO LIKE '#%'
       OR PRODUCTION_UNIT LIKE '#%'
       OR CLINICAL_STATE LIKE '#%'
@@ -241,11 +241,14 @@ class cfda(BaseCrawler):
         params1 = ['ID', 'PRODUCT_NAME', 'TRAD_NAME', 'SPEC', 'ZC_FORM', 'PERMIT_NO',
                    'PRODUCTION_UNIT', 'CODE']
 
-        ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', '化学药品', '医用气体', '医用气体(气态氧)', '其他', '气态',
-                 '液态和气态', '非剂型', '气态 液态',
-                 '体外诊断试剂', '鼻用制剂', '液态气体', '非制剂,其他:氧', '液态', '氧(气态、液态)', '液体	', '气剂', '液态氧',
-                 '气体、液态', '医用氧(液态)',
-                 '有效成份', '液态空气', '吸入性气体', '氧', '医用氧气', '氧气', '医用氧(气态、液态)', '呼吸', '其他:医用氧(气态)']
+        ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', '化学药品', '医用气体', '医用气体(气态氧)',
+                 '其他', '气态', '液态和气态', '非剂型', '气态 液态', '体外诊断试剂', '鼻用制剂', '液态气体',
+                 '非制剂,其他:氧', '液态', '氧(气态、液态)', '液体	', '气剂', '液态氧', '气体、液态',
+                 '医用氧(液态)', '有效成份', '液态空气', '吸入性气体', '氧', '医用氧气', '氧气', '医用氧(气态、液态)',
+                 '呼吸', '其他:医用氧(气态)', '有效部位', '制剂中间体', '放免药盒', '药用辅料', '原料', '辅料',
+                 '特殊药用辅料', '颗粒剂(制剂中间体)', '制剂中间体水包衣颗粒', '制剂用中间体', '特殊辅料', '放射性密封源',
+                 '制剂:密封源', '放射性密封籽源', '药用辅料(供注射用)', '药用特殊辅料', '非制剂:辅料', '原料呀', '新辅料'
+                 ]
         PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医用氧气', '医用氧(液态)']
 
         # 循环记录
@@ -413,5 +416,5 @@ class GetData(threading.Thread):
 if __name__ == '__main__':
     z = cfda('192.168.5.94')
     # z.startup_parser()
-    z.parser()
+    # z.parser()
     z.to_oracle()
