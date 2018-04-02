@@ -71,23 +71,32 @@ class LianJia(BaseCrawler):
             self._html_cursor.insert(params)
             self._urlpool.update_success_url(params['url'])
 
-            soup = BeautifulSoup(html, 'html.parser')
-            lis = soup.find('li', class_='clear')
-            params.pop('html')
+    def parser(self):
+        data = {}
+        print(self._html_cursor.find().count())
+        for params in self._html_cursor.find():
+            soup = BeautifulSoup(params['html'], 'html.parser')
+            lis = soup.find_all('li', class_='clear')
             for li in lis:
-                params['url'] = li.a['href']
-                key = ['unitPrice', 'totalPrice', 'taxfree', 'subway', 'followInfo', 'positionInfo', 'houseInfo',
+                if li.a:
+                    data['url'] = li.a['href']
+                else:
+                    print(1)
+                # 单价，总价，标签，关注信息，地址信息，房屋信息，标题
+                key = ['unitPrice', 'totalPrice', 'tag', 'followInfo', 'positionInfo', 'houseInfo',
                        'title']
                 for k in key:
-                    params[k] = li.find('div', class_=k).text
-
-                params['houseInfo1'] = li.find('div', class_='houseInfo').a.text
-                params['positionInfo1'] = li.find('div', class_='positionInfo').a.text
-
-    def parser(self):
-        pass
-
-
-if __name__ == '__main__':
-    a = LianJia('192.168.16.113')
-    a.startup()
+                    if li.find('div', class_=k):
+                        data[k] = li.find('div', class_=k).text
+                    else:
+                        print(1)
+                if li.find('div', class_='houseInfo'):
+                    data['houseInfo1'] = li.find('div', class_='houseInfo').a.text
+                else:
+                    print(1)
+                if li.find('div', class_='positionInfo'):
+                    data['positionInfo1'] = li.find('div', class_='positionInfo').a.text
+                else:
+                    print(1)
+                self._data_cursor.insert(data)
+                data.clear()
