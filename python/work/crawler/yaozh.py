@@ -109,10 +109,10 @@ class yaozh(BaseCrawler):
 
         soup = BeautifulSoup(html, 'html.parser')
 
-        # 可能存在tbody为空的情况，为空则该了解无效
-        tbody = soup.find('tbody')
-        if tbody is None:
-            return 1, 'tbody为空'
+        # 可能存在tbody为空的情况，为空则该了解无效，其实是请求失败的一种表现
+        # tbody = soup.find('tbody')
+        # if tbody is None:
+        #     return 3, 'tbody为空'
 
         tag = soup.find('span', class_='toFindImg')
         if tag is None:
