@@ -39,6 +39,10 @@ class BaseCrawler(object):
 
     @abstractmethod
     def _init_url(self):
+        """
+        必须包含type,url这两个key值
+        :return:
+        """
         pass
 
     @abstractmethod
