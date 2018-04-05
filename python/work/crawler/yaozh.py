@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # encoding: utf-8
 # qiushengming-minnie
+import csv
 import datetime
 import random
 import re
 import time
-from abc import abstractmethod, ABCMeta
 
+from abc import abstractmethod, ABCMeta
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import NoSuchElementException
-
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils import mlogger
 from python.no_work.utils.common import getNowDate, reg
@@ -110,9 +110,9 @@ class yaozh(BaseCrawler):
         soup = BeautifulSoup(html, 'html.parser')
 
         # 可能存在tbody为空的情况，为空则该了解无效，其实是请求失败的一种表现
-        # tbody = soup.find('tbody')
-        # if tbody is None:
-        #     return 3, 'tbody为空'
+        tbody = soup.find('tbody')
+        if tbody is None:
+            return 3, 'tbody为空'
 
         tag = soup.find('span', class_='toFindImg')
         if tag is None:
@@ -169,8 +169,7 @@ class yaozh(BaseCrawler):
         while not self._urlpool.empty():
             params = self._urlpool.get()
             html = None
-            html_b = self._crawler.request_get_url(params['url'],
-                                                   header={'Cookie': self.get_cookie()})
+            html_b = self._crawler.driver_get_url(params['url'])
 
             if not html_b:
                 for i in range(10):
@@ -180,7 +179,7 @@ class yaozh(BaseCrawler):
                 time.sleep(10)
                 continue
             elif html_b:
-                html = html_b.decode('utf-8')
+                html = html_b
 
             if html is None:
                 continue
@@ -203,9 +202,10 @@ class yaozh(BaseCrawler):
                     try:
                         row[tr.th.text] = re.sub('[\n ]', '', tr.td.span.text)
                     except AttributeError:
-                        print(data['url'])
+                        # logger.error(data['url'])
+                        pass
 
-                self._data_cursor.insert(row)
+                self._data_cursor.save(row)
             else:
                 self._html_cursor.delete_one({'_id': data['_id']})
                 logger.error(data['url'])
@@ -359,7 +359,7 @@ class yaozh_interaction(yaozh):
                         try:
                             row[tr.th.text] = re.sub('[\n ]', '', tr.td.text)
                         except AttributeError:
-                            print(data['url'])
+                            logger.error(data['url'])
 
                     self._data_cursor.insert(row)
                 else:
@@ -431,7 +431,7 @@ class yaozh_monitored(yaozh):
                 '互助县人民医院']
         for c in city:
             result_list.append({
-                'url': 'https://db.yaozh.com/monitored?p=1&area={area}&pageSize=30&time=2018-12'.format(area=c),
+                'url': 'https://db.yaozh.com/monitored?p=1&area={area}&pageSize=30&time=2016-12'.format(area=c),
                 'type': self._cn_name
             })
 
@@ -458,7 +458,7 @@ class yaozh_monitored(yaozh):
             params = self._urlpool.get()
             # 加载页面
             html = self._crawler.driver_get_url(params['url'])
-            time.sleep(1)
+            time.sleep(0.5)
             # soup化
             soup = BeautifulSoup(html, 'html.parser')
             # 获取数据所在位置，进行验证确认。
@@ -492,7 +492,7 @@ class yaozh_monitored(yaozh):
             else:
                 params['isenable'] = '无效链接'
                 # self._urlpool.update({'_id': params['_id']}, params)
-                print(params['url'])
+                logger.info(params['url'])
                 continue
 
             # 如果是第一页的话，需要检测是否还有下一页
@@ -511,6 +511,133 @@ class yaozh_monitored(yaozh):
                         'url': url.replace('p=1', 'p=' + str(i)),
                         'type': self._cn_name
                     })
+
+    def test(self):
+        pass
+
+
+# 超说明书用药
+class yaozh_unlabeleduse(yaozh):
+    def _init_url(self):
+        if self._urlpool.find_all_count():
+            return
+
+        url = 'https://db.yaozh.com/unlabeleduse?p=1&name={name}&pageSize=30'
+        result_list = []
+
+        csv_reader = csv.reader(open('D:\Temp\药物成分表.csv', encoding='utf-8'))
+        for row in csv_reader:
+            result_list.append({
+                'url': url.format(name=row[0]),
+                'type': self._get_cn_name()
+            })
+        self._urlpool.save_url(result_list)
+
+    def _get_name(self):
+        return 'yaozh_unlabeleduse'
+
+    def _get_cn_name(self):
+        return '药智网_超说明书用药'
+
+    def startup(self):
+        # 登陆是否成功
+        while not self.login():
+            time.sleep(10)
+
+        index = 0
+        while not self._urlpool.empty():
+            index += 1
+            if index % 500 == 0:
+                count = self._urlpool.cursor.find({'url_': {'$exists': 'true'}}).count()
+                logger.info('获取数量：' + str(count))
+                if count == 1658:
+                    break
+            # 获取参数
+            params = self._urlpool.get()
+            # 加载页面
+            html = self._crawler.driver_get_url(params['url'])
+            time.sleep(0.5)
+            # soup化
+            soup = BeautifulSoup(html, 'html.parser')
+            # 获取数据所在位置，进行验证确认。
+            tbody = soup.find_all('tbody')
+            # 校验：校验通过存储数据，继续；校验失败，跳过
+            if tbody and len(tbody) >= 1:
+                # 存储详情页链接，直接存储data中去
+                for tr in tbody[0].find_all('tr'):
+                    p = {
+                        'date': getNowDate(),
+                        'url_': params['url']
+                    }
+                    a = tr.find('a')
+                    if a['href'].__contains__(BASE_DOMAIN):
+                        url = a['href']
+                    else:
+                        url = BASE_DOMAIN + a['href']
+                    p['url'] = url
+                    p['药物名称'] = tr.find('th').text
+
+                    tds = tr.find_all('td')[0:2]
+                    p['超说明书适应症'] = tds[0].text
+                    p['批准适应症'] = tds[1].text
+
+                    self._urlpool.save_url(p)
+                self.save_html(h=html, p=params)
+            else:
+                # 无效链接
+                params['isenable'] = '3'
+                self._urlpool.update({'_id': params['_id']}, params)
+                continue
+
+            # 如果是第一页的话，需要检测是否还有下一页
+            page = soup.find('span', class_='total-nums')
+            if params['url'].__contains__('?p=1&') and page:
+                count = int(reg('[0-9]+', page.text))
+                url = params['url']
+                if count > 210:
+                    logger.info(url)
+                    page = 8
+                else:
+                    page = count // 30 + 2
+                # 获取page_count，整除+2，因为range[大于等于, 小于]，整除是向下取整
+                for i in range(2, page):
+                    self._urlpool.put({
+                        'url': url.replace('p=1', 'p=' + str(i)),
+                        'type': self._cn_name
+                    })
+
+    def startup2(self):
+        # 登陆是否成功
+        while not self.login():
+            time.sleep(10)
+
+        for params in self._urlpool.cursor.find({'url_': {'$exists': 'true'}}):
+            # 加载页面
+            html = self._crawler.driver_get_url(params['url'])
+            time.sleep(0.5)
+            # soup化
+            soup = BeautifulSoup(html, 'html.parser')
+            # 获取数据所在位置，进行验证确认。
+            tbodys = soup.find_all('tbody')
+            # 校验：校验通过存储数据，继续；校验失败，跳过
+            if tbodys and len(tbodys) >= 1:
+                for tbody in tbodys[1:3]:
+                    p = {
+                        'date': getNowDate(),
+                        'url': params['url'],
+                        '药物名称': params[''],
+                        '超说明书适应症': params['超说明书适应症'],
+                        '批准适应症': params['超说明书适应症'],
+                    }
+                    for tr in tbody.find_all('tr'):
+                        p[tr.th.text] = tr.td.text
+                    self._data_cursor.insert(p)
+                self.save_html(h=html, p=params)
+            else:
+                # 无效链接
+                params['isenable'] = '4'
+                self._urlpool.update({'_id': params['_id']}, params)
+                continue
 
     def test(self):
         pass
