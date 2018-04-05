@@ -100,9 +100,6 @@ class Crawler(object):
             }
             self.__error_cursor.insert(error_info)
 
-        if self.__request_count % 500 == 0:
-            self.update_proxy()
-
         self.__request_count += 1
 
         return result
@@ -147,9 +144,6 @@ class Crawler(object):
                 'date': getNowDate()
             }
             self.__error_cursor.insert(error_info)
-
-        if self.__request_count % 500 == 0:
-            self.update_proxy()
 
         self.__request_count += 1
 
