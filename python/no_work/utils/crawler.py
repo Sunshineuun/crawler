@@ -190,8 +190,10 @@ class Crawler(object):
             # 代理设置
             proxy = request.ProxyHandler({proxy_ip['type']: proxy_ip['ip'] + ':' + proxy_ip['port']})
             self.opener = request.build_opener(request.HTTPHandler, proxy)
-            self.opener.addheaders = [get_user_agent()]
-            request.install_opener(opener=self.opener)
+        else:
+            self.opener = request.build_opener(request.HTTPHandler)
+        self.opener.addheaders = [get_user_agent()]
+        request.install_opener(opener=self.opener)
 
     def new_driver(self, proxy_ip=None):
         options = webdriver.ChromeOptions()
