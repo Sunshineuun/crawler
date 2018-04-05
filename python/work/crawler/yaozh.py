@@ -552,6 +552,9 @@ class yaozh_unlabeleduse(yaozh):
                 logger.info('获取数量：' + str(count))
                 if count == 1658:
                     break
+                self._crawler.update_proxy()
+                self.login()
+                time.sleep(4)
             # 获取参数
             params = self._urlpool.get()
             # 加载页面
