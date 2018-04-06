@@ -66,15 +66,17 @@ class disease(BaseCrawler):
                     try:
                         url_r = []
                         for d in res_dic['result']['list']:
-                            d.updae({
+                            d.update({
                                 'url': url1.format(diseaseId=d['diseaseId']),
                                 'type': self._get_cn_name()
                             })
                             url_r.append(d)
                         self._urlpool.save_url(url_r)
                         self.save_html(h=res.text, p=data)
+                        self._urlpool.update({'_id':data['_id']},{'$set':{'isenable':'0'}})
                         url_r.clear()
-                    except:
+                    except BaseException as ex:
+                        logger.info(ex)
                         logger.error(data)
             else:
                 res = requests.get(data['url'])
