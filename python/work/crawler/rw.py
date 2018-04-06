@@ -17,6 +17,7 @@ class disease(BaseCrawler):
     """
     疾病
     """
+
     def _init_url(self):
         params = {
             'pageNo': 1,
@@ -26,27 +27,16 @@ class disease(BaseCrawler):
             'departmentCode': '',
             'symptomsWords': ''
         }
-        header = {
-            'Content-Type': 'application/json',
-            'Cookie': 'jeesite.session.id=1ab0769d482c4068bac4d2a6b3ecec74; JSESSIONID=206209EF59D3A574B729D798F1A607B5'
-        }
+
         url = 'http://ccdas.ipmph.com/rwDisease/getRwDiseaseList'
-        url1 = 'http://ccdas.ipmph.com/rwDisease/getRwDiseaseDetail?diseaseId={diseaseId}'
         result = []
         for page in range(1, 98):
             params['pageNo'] += page
-            res = requests.post(url=url, data=json.dumps(params), headers=header)
-            if res.status_code == requests.codes.ok:
-                res_dic = res.json()
-                self._html_cursor.insert_one(res_dic)
-                for d in res_dic['result']['list']:
-                    self._data_cursor.insert(d)
-                    result.append({
-                        'url': url1.format(diseaseId=d['diseaseId']),
-                        'type': self._get_cn_name()
-                    })
-            else:
-                logger.error(page)
+            result.append({
+                'url': url,
+                'type': self._get_cn_name(),
+                'params': str(params)
+            })
         self._urlpool.save_url(result)
 
     def _get_name(self):
@@ -56,14 +46,35 @@ class disease(BaseCrawler):
         return '人卫助手-疾病'
 
     def startup(self):
+        header = {
+            'Content-Type': 'application/json',
+            'Cookie': 'jeesite.session.id=1ab0769d482c4068bac4d2a6b3ecec74; JSESSIONID=206209EF59D3A574B729D798F1A607B5'
+        }
+        url1 = 'http://ccdas.ipmph.com/rwDisease/getRwDiseaseDetail?diseaseId={diseaseId}'
         while not self._urlpool.empty():
             data = self._urlpool.get()
-            res = requests.get(data['url'])
-            if res.status_code == 200:
-                data['html'] = res.text
-                self._html_cursor.insert(data)
+
+            if 'params' in data:
+                res = requests.post(url=data['url'], data=json.dumps(data['params']), headers=header)
+                if res.status_code == requests.codes.ok:
+                    res_dic = res.json()
+                    self._html_cursor.insert_one(res_dic)
+                    try:
+                        for d in res_dic['result']['list']:
+                            self._data_cursor.insert(d)
+                            self._urlpool.save_url({
+                                'url': url1.format(diseaseId=d['diseaseId']),
+                                'type': self._get_cn_name()
+                            })
+                    except:
+                        logger.error(data)
             else:
-                logger.error(data['url'])
+                res = requests.get(data['url'])
+                if res.status_code == 200:
+                    data['html'] = res.text
+                    self._html_cursor.insert(data)
+                else:
+                    logger.error(data['url'])
 
     def parser(self):
         pass
