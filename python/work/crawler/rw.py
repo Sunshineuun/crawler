@@ -38,6 +38,7 @@ class disease(BaseCrawler):
             res = requests.post(url=url, data=json.dumps(params), headers=header)
             if res.status_code == requests.codes.ok:
                 res_dic = res.json()
+                self._html_cursor.insert_one(res_dic)
                 for d in res_dic['list']:
                     self._data_cursor.insert(d)
                     result.append({
