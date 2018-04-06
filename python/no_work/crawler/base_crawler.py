@@ -3,6 +3,7 @@
 # qiushengming-minnie
 from abc import abstractmethod
 
+from python.no_work.utils.common import getNowDate
 from python.no_work.utils.crawler import Crawler
 from python.no_work.utils.mongodb import MongodbCursor
 from python.no_work.utils.urlpool import URLPool
@@ -65,3 +66,15 @@ class BaseCrawler(object):
     @abstractmethod
     def parser(self):
         pass
+
+    def save_html(self, h, p):
+        """
+        :param h: str
+        :param p: 字典
+        :return:
+        """
+        p['html'] = h
+        p['source'] = self._cn_name
+        p['create_date'] = getNowDate()
+        self._html_cursor.save(p)
+        self._urlpool.update_success_url(p['url'])
