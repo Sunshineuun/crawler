@@ -33,8 +33,8 @@ class disease(BaseCrawler):
         url = 'http://ccdas.ipmph.com/rwDisease/getRwDiseaseList'
         url1 = 'http://ccdas.ipmph.com/rwDisease/getRwDiseaseDetail?diseaseId={diseaseId}'
         result = []
-        for page in range(98):
-            params['pageNo'] += 1
+        for page in range(1, 98):
+            params['pageNo'] += page
             res = requests.post(url=url, data=json.dumps(params), headers=header)
             if res.status_code == requests.codes.ok:
                 res_dic = res.json()
