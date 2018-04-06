@@ -66,13 +66,14 @@ class disease(BaseCrawler):
                                 'url': url1.format(diseaseId=d['diseaseId']),
                                 'type': self._get_cn_name()
                             })
+                        self.save_html(h=res.text, p=data)
                     except:
                         logger.error(data)
             else:
                 res = requests.get(data['url'])
                 if res.status_code == 200:
                     data['html'] = res.text
-                    self._html_cursor.insert(data)
+                    self.save_html(h=res.text, p=data)
                 else:
                     logger.error(data['url'])
 
