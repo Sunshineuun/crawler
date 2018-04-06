@@ -58,19 +58,22 @@ class disease(BaseCrawler):
             data = self._urlpool.get()
 
             if 'pageNo' in data:
+                print(data['pageNo'])
                 params['pageNo'] = data['pageNo']
                 res = requests.post(url=data['url'], data=json.dumps(params), headers=header)
                 if res.status_code == requests.codes.ok:
                     res_dic = res.json()
-                    self._html_cursor.insert_one(res_dic)
                     try:
+                        url_r = []
                         for d in res_dic['result']['list']:
-                            self._data_cursor.insert(d)
-                            self._urlpool.save_url({
+                            d.updae({
                                 'url': url1.format(diseaseId=d['diseaseId']),
                                 'type': self._get_cn_name()
                             })
+                            url_r.append(d)
+                        self._urlpool.save_url(url_r)
                         self.save_html(h=res.text, p=data)
+                        url_r.clear()
                     except:
                         logger.error(data)
             else:
