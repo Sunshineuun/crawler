@@ -131,19 +131,6 @@ class yaozh(BaseCrawler):
             cookie += dic['name'] + '=' + dic['value'] + ';'
         return cookie
 
-    def save_html(self, h, p):
-        """
-
-        :param h: str
-        :param p: 字典
-        :return:
-        """
-        p['html'] = h
-        p['source'] = self._cn_name
-        p['create_date'] = getNowDate()
-        self._html_cursor.save(p)
-        self._urlpool.update_success_url(p['url'])
-
     def check_and_save(self, params, html):
         stat, msg = self.check_rule(html)
         logger.info(params['url'] + " - " + msg)
@@ -618,6 +605,7 @@ class yaozh_unlabeleduse(yaozh):
             # 加载页面
             html = self._crawler.driver_get_url(params['url'])
             time.sleep(0.5)
+
             # soup化
             soup = BeautifulSoup(html, 'html.parser')
             # 获取数据所在位置，进行验证确认。
@@ -628,7 +616,7 @@ class yaozh_unlabeleduse(yaozh):
                     p = {
                         'date': getNowDate(),
                         'url': params['url'],
-                        '药物名称': params[''],
+                        '药物名称': params['药物名称'],
                         '超说明书适应症': params['超说明书适应症'],
                         '批准适应症': params['超说明书适应症'],
                     }
