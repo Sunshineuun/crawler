@@ -39,7 +39,7 @@ class disease(BaseCrawler):
             if res.status_code == requests.codes.ok:
                 res_dic = res.json()
                 self._html_cursor.insert_one(res_dic)
-                for d in res_dic['list']:
+                for d in res_dic['result']['list']:
                     self._data_cursor.insert(d)
                     result.append({
                         'url': url1.format(diseaseId=d['diseaseId']),
