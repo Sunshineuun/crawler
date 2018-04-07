@@ -6,10 +6,10 @@ import json
 import random
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from python.no_work.crawler.base_crawler import BaseCrawler
-from python.no_work.utils import mlogger, PROXY_IP
+from python.no_work.utils import mlogger, PROXY_IP, PROXY_IP2
 
 logger = mlogger.get_defalut_logger('rw.log', 'rw')
 
@@ -73,13 +73,13 @@ class disease(BaseCrawler):
                             url_r.append(d)
                         self._urlpool.save_url(url_r)
                         self.save_html(h=res.text, p=data)
-                        self._urlpool.update({'_id':data['_id']},{'$set':{'isenable':'0'}})
+                        self._urlpool.update({'_id': data['_id']}, {'$set': {'isenable': '0'}})
                         url_r.clear()
                     except BaseException as ex:
                         logger.info(ex)
                         logger.error(data)
             else:
-                res = requests.get(data['url'])
+                res = requests.get(data['url'], proxies=random.choice(PROXY_IP2))
                 if res.status_code == 200:
                     data['html'] = res.text
                     self.save_html(h=res.text, p=data)
@@ -87,4 +87,40 @@ class disease(BaseCrawler):
                     logger.error(data['url'])
 
     def parser(self):
-        pass
+        """
+        title - 中文名称
+        englishDis - 英文名称
+        englishDisAlias - 英文别名
+        chineseDisAlias - 别名
+        disDesc - 概述
+        disClinical - 临床表现
+        disDiagnose - 诊断
+        disTreat - 治疗
+        disProg - 预后
+        disPreventive - 预防
+        icd10Code - icd
+        icd9CmCode - icd9
+        from - 来源
+
+        :return:
+        """
+        keys = ['title', 'chineseDisAlias', 'englishDis', 'englishDisAlias', 'icd10Code', 'icd9CmCode', 'from', ]
+        for d in self._html_cursor.find({'title': {'$exists': 'true'}}):
+            p = {
+                '_id': d['_id'],
+                'url': d['url']
+            }
+            for k in keys:
+                p[k] = d[k]
+            soup = BeautifulSoup(d['html'], 'html.parser')
+            divs = soup.find('div', class_='mechanism_top mechanism_bottom')
+            for div in divs.children:
+                if type(div) != Tag:
+                    continue
+                if len(div.contents) < 3:
+                    continue
+                p[div.contents[1].text] = div.contents[3].text
+            self._data_cursor.insert_one(p)
+
+
+
