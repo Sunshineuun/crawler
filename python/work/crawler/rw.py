@@ -6,7 +6,9 @@ import json
 import random
 
 import requests
+import time
 from bs4 import BeautifulSoup, Tag
+from bson import InvalidDocument
 from requests.exceptions import ChunkedEncodingError
 
 from python.no_work.crawler.base_crawler import BaseCrawler
@@ -57,6 +59,8 @@ class disease(BaseCrawler):
         url1 = 'http://ccdas.ipmph.com/rwDisease/getRwDiseaseDetail?diseaseId={diseaseId}'
         while not self._urlpool.empty():
             data = self._urlpool.get()
+
+            time.sleep(2)
 
             if 'pageNo' in data:
                 print(data['pageNo'])
@@ -114,6 +118,8 @@ class disease(BaseCrawler):
 
         :return:
         """
+        self.get_data_cursor().delete_many({})
+
         keys = ['title', 'chineseDisAlias', 'englishDis', 'englishDisAlias', 'icd10Code', 'icd9CmCode', 'from', ]
         for d in self._html_cursor.find({'title': {'$exists': 'true'}}):
             p = {
@@ -124,13 +130,20 @@ class disease(BaseCrawler):
                 p[k] = d[k]
             soup = BeautifulSoup(d['html'], 'html.parser')
             divs = soup.find('div', class_='mechanism_top mechanism_bottom')
-            for div in divs.children:
-                if type(div) != Tag:
-                    continue
-                if len(div.contents) < 3:
-                    continue
-                p[div.contents[1].text] = div.contents[3].text
-            self._data_cursor.insert_one(p)
-
-
-
+            if divs is None:
+                state = str(self._urlpool.update({'_id': d['_id']}, {'$set': {'isenable': '1'}}))
+                print('错误数据更新：{url}，状态{state}'.format(url=d['url'], state=state))
+            try:
+                for div in divs.children:
+                    if type(div) != Tag:
+                        continue
+                    if len(div.contents) < 4:
+                        continue
+                    p[div.contents[1].text.replace('.', '')] = div.contents[3].text
+                self._data_cursor.insert_one(p)
+            except AttributeError as attributeError:
+                logger.error(attributeError)
+                logger.error(d['url'])
+            except InvalidDocument as e:
+                # key '1.诊断' must not contain '.' BSONError;MongoDB插入异常
+                logger.error(e)
