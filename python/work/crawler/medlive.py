@@ -108,11 +108,11 @@ class disease(BaseCrawler):
             soup = BeautifulSoup(res.text, 'html.parser')
             div = soup.find('div', class_='case_name')
             # 校验是否请求正确
-            if div.label.text != d['name']:
-                continue
-            res = self._crawler.get(div.a['href'])
-            if not res:
-                continue
+            if div is not None and div.label.text == d['name']:
+                res = self._crawler.get(div.a['href'])
+                if not res:
+                    continue
+
             soup = BeautifulSoup(res.text, 'html.parser')
             a_tags = soup.find('div', class_='bd clearfix').find_all('a')
 
@@ -183,7 +183,7 @@ class disease(BaseCrawler):
 
             self._html_cursor.insert_one(html)
             self._data_cursor.insert_one(data)
-            self._urlpool.update_success_url({'url':data['url']})
+            print(self._urlpool.update_success_url(data['url']))
 
     def parser(self):
         pass
