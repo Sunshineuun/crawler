@@ -85,6 +85,11 @@ class disease(BaseCrawler):
                 except ChunkedEncodingError as chunkedEncodingError:
                     logger.error(chunkedEncodingError)
                     continue
+                except ConnectionResetError as connectionResetError:
+                    # 远程主机强迫关闭了一个现有的连接。
+                    logger.error(connectionResetError)
+                    continue
+
                 if res.status_code == 200:
                     data['html'] = res.text
                     self.save_html(h=res.text, p=data)
