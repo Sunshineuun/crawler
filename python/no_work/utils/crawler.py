@@ -9,11 +9,13 @@ import pymongo
 
 from urllib import request, parse
 
+import requests
+from requests.exceptions import ProxyError, ChunkedEncodingError
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-from python.no_work.utils import mlogger, USER_AGENT, PROXY_IP
+from python.no_work.utils import mlogger, USER_AGENT, PROXY_IP, PROXY_IP2
 from python.no_work.utils.common import getNowDate
 
 logger = mlogger.get_defalut_logger('crawler.log', 'crawler')
@@ -213,3 +215,17 @@ class Crawler(object):
     def refresh(self):
         if self.driver:
             self.driver.refresh()
+
+    def get(self, url, params=None, **kwargs):
+        try:
+            res = requests.get(url, params=params, proxies=random.choice(PROXY_IP2), **kwargs)
+            if res.status_code == 200:
+                return res
+        except ChunkedEncodingError as chunkedEncodingError:
+            logger.error(chunkedEncodingError)
+        except ConnectionResetError as connectionResetError:
+            # 远程主机强迫关闭了一个现有的连接。
+            logger.error(connectionResetError)
+        except ProxyError as proxyerror:
+            logger.error(proxyerror)
+        return False
