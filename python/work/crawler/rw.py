@@ -7,6 +7,7 @@ import random
 
 import requests
 from bs4 import BeautifulSoup, Tag
+from requests.exceptions import ChunkedEncodingError
 
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils import mlogger, PROXY_IP, PROXY_IP2
@@ -76,10 +77,14 @@ class disease(BaseCrawler):
                         self._urlpool.update({'_id': data['_id']}, {'$set': {'isenable': '0'}})
                         url_r.clear()
                     except BaseException as ex:
-                        logger.info(ex)
+                        logger.error(ex)
                         logger.error(data)
             else:
-                res = requests.get(data['url'], proxies=random.choice(PROXY_IP2))
+                try:
+                    res = requests.get(data['url'], proxies=random.choice(PROXY_IP2))
+                except ChunkedEncodingError as chunkedEncodingError:
+                    logger.error(chunkedEncodingError)
+                    continue
                 if res.status_code == 200:
                     data['html'] = res.text
                     self.save_html(h=res.text, p=data)
