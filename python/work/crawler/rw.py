@@ -9,7 +9,7 @@ import requests
 import time
 from bs4 import BeautifulSoup, Tag
 from bson import InvalidDocument
-from requests.exceptions import ChunkedEncodingError
+from requests.exceptions import ChunkedEncodingError, ProxyError
 
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils import mlogger, PROXY_IP, PROXY_IP2
@@ -92,6 +92,9 @@ class disease(BaseCrawler):
                 except ConnectionResetError as connectionResetError:
                     # 远程主机强迫关闭了一个现有的连接。
                     logger.error(connectionResetError)
+                    continue
+                except ProxyError as proxyerror:
+                    logger.error(proxyerror)
                     continue
 
                 if res.status_code == 200:
