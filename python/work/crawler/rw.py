@@ -135,7 +135,9 @@ class disease(BaseCrawler):
             divs = soup.find('div', class_='mechanism_top mechanism_bottom')
             if divs is None:
                 state = str(self._urlpool.update({'_id': d['_id']}, {'$set': {'isenable': '1'}}))
+                print(self._html_cursor.delete_one({'_id': d['_id']}))
                 print('错误数据更新：{url}，状态{state}'.format(url=d['url'], state=state))
+                continue
             try:
                 for div in divs.children:
                     if type(div) != Tag:
