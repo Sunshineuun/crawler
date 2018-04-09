@@ -2,7 +2,7 @@
 # encoding: utf-8
 # qiushengming-minnie
 # 医学百科
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from python.no_work.crawler.base_crawler import BaseCrawler
 
@@ -42,6 +42,7 @@ class disease(BaseCrawler):
             for a in a_tags:
                 result.append({
                     'url': self.domain + a['href'],
+                    'name': a.text,
                     'type': self._cn_name,
                     'tree': 1
                 })
@@ -53,4 +54,25 @@ class disease(BaseCrawler):
         self.save_html(res.text, d)
 
     def parser(self):
-        pass
+        result = []
+        for d in self._html_cursor.find({'tree': 1}):
+            soup = self.to_soup(d['html'])
+            key = ''
+            p = {
+                'url': d['url'],
+                'name': d['name'],
+                'type': d['type'],
+            }
+            for tag in soup.find(id='content').contents:
+                if type(tag) != Tag or tag.name == 'div':
+                    continue
+
+                if tag.name == 'h2':
+                    key = tag.text
+                elif tag.name == 'h3':
+                    key += tag.text
+                elif tag.name in ['p', 'h4']:
+                    p[key] += tag.text
+                    p[key] += '\n'
+            result.append(p)
+        self._data_cursor.insert_many(result)
