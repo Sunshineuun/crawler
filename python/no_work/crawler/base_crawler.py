@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 # qiushengming-minnie
+import traceback
 from abc import abstractmethod
 
 from python.no_work.utils.common import getNowDate
 from python.no_work.utils.crawler import Crawler
+from python.no_work.utils.memail import send_mail
 from python.no_work.utils.mongodb import MongodbCursor
 from python.no_work.utils.urlpool import URLPool
 
@@ -27,7 +29,8 @@ class BaseCrawler(object):
         self._html_cursor = self.get_html_cursor()
         self._data_cursor = self.get_data_cursor()
 
-        self._init_url()
+        self.__init_url()
+        self.__run()
 
     def get_html_cursor(self):
         return self._mongo.get_cursor(self.__name, 'html')
@@ -37,6 +40,18 @@ class BaseCrawler(object):
 
     def get_urlpool(self):
         return URLPool(self._mongo, self.__name)
+
+    def __init_url(self):
+        if self._urlpool.find_all_count():
+            return
+        self._init_url()
+
+    def __run(self):
+        try:
+            while not self._urlpool.empty():
+                self.startup()
+        except BaseException as e:
+            send_mail(traceback.format_exc())
 
     @abstractmethod
     def _init_url(self):
