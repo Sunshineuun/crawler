@@ -58,6 +58,7 @@ class BaseCrawler(object):
                 self.startup()
             self.parser()
         except BaseException as e:
+            print(traceback.format_exc())
             send_mail(traceback.format_exc())
 
     @abstractmethod
