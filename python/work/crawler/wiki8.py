@@ -2,7 +2,7 @@
 # encoding: utf-8
 # qiushengming-minnie
 # 医学百科
-from bs4 import BeautifulSoup, Tag
+from bs4 import Tag
 
 from python.no_work.crawler.base_crawler import BaseCrawler
 
