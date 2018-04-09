@@ -28,6 +28,15 @@ class disease(BaseCrawler):
                 'type': self._cn_name,
                 'tree': 0
             })
+        res = self._crawler.get('https://www.wiki8.com/Categorize/%E7%96%BE%E7%97%85.html')
+        soup = self.to_soup(res.text)
+        for a in soup.find(id='treeRoot').find_all('a'):
+            result.append({
+                'url': self.domain + a['href'],
+                'name': a.text,
+                'type': self._cn_name,
+                'tree': 0
+            })
         self._urlpool.save_url(result)
 
     def startup(self):
@@ -36,8 +45,13 @@ class disease(BaseCrawler):
         if res.status_code != 200:
             return
 
+        soup = self.to_soup(res.text)
+
+        # 不是列表的，是详细信息的
+        if not soup.find('ul', class_='cateList'):
+            d['tree'] = 1
+
         if d['tree'] == 0:
-            soup = self.to_soup(res.text)
             a_tags = soup.find('ul', class_='cateList').find_all('a')
             result = []
             for a in a_tags:
