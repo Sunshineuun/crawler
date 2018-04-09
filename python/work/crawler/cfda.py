@@ -68,17 +68,16 @@ class cfda(BaseCrawler):
     国家食品药品监督管理总局
     2018-3-27
         1.请求错误的url进行标记，因为发现有部分数据请求为空
-        2.
 
     需要提交
     """
 
     def __init__(self, ip='127.0.0.1'):
-        super().__init__(ip)
-        self.pici = 0
-        self.url_index = 0
+        self.__domain_url = 'http://app1.sfda.gov.cn/datasearch/face3/'
+        self.__href_re = 'javascript:commitForECMA[\u4e00-\u9fa50-9a-zA-Z\(\)\?&=,\'.]+'
 
         self.oralce_cursor = OralceCursor()
+        super().__init__(ip)
 
     def _get_cn_name(self):
         return 'CFDA'
@@ -93,13 +92,9 @@ class cfda(BaseCrawler):
         page:翻页参数
         :return:
         """
-        self.url_index = self._urlpool.find_all_count()
-        if self.url_index:
-            return
-
-        # 国产药品
-        url_template = 'http://app1.sfda.gov.cn/datasearch/face3/search.jsp?tableId={code}&curstart={page}'
-        _params = {
+        url = 'http://app1.sfda.gov.cn/datasearch/face3/search.jsp?tableId={code}&curstart={page}'
+        result = []
+        p = {
             '国产': {
                 'code': 25,
                 'page': 11061
@@ -109,17 +104,15 @@ class cfda(BaseCrawler):
                 'page': 274
             }
         }
-        result_list = []
-        for k, v in _params.items():
+        for k, v in p.items():
             for i in range(1, v['page'] + 1):
-                _p = {
-                    '_id': str(v['code']) + str(i),
-                    'url': url_template.format(code=v['code'], page=i),
-                    'type': 'CFDA-国产药'
+                p1 = {
+                    'url': url.format(code=v['code'], page=i),
+                    'type': 'CFDA-国产药',
+                    'tree': 0
                 }
-                result_list.append(_p)
-        self._urlpool.save_url(result_list)
-        self.url_index = self._urlpool.find_all_count()
+                result.append(p1)
+        self._urlpool.save_url(result)
 
     def get_cookie(self):
         cookie = ''
@@ -128,64 +121,45 @@ class cfda(BaseCrawler):
         return cookie
 
     def startup(self):
-        # 域名前缀
-        domain_url = 'http://app1.sfda.gov.cn/datasearch/face3/'
-        href_re = 'javascript:commitForECMA[\u4e00-\u9fa50-9a-zA-Z\(\)\?&=,\'.]+'
+        d1 = datetime.datetime.now()
+        params = self._urlpool.get()
+        html = self._crawler.driver_get_url(params['url'])
+        soup = BeautifulSoup(html, 'html.parser')
+        if params['tree'] == 0:
+            a_tags = soup.find_all('a', href=re.compile(self.__href_re))
 
-        while not self._urlpool.empty():
-            d1 = datetime.datetime.now()
-            params = self._urlpool.get()
-            html = self._crawler.driver_get_url(params['url'])
-            soup = BeautifulSoup(html, 'html.parser')
-            if params['url'].__contains__('search.jsp'):
-                a_tags = soup.find_all('a', href=re.compile(href_re))
+            if a_tags and len(a_tags):
 
-                # if not a_tags or len(a_tags) == 0:
-                #     html = self.crawler.driver_get_url(params['url'])
-
-                # soup = BeautifulSoup(html)
-                # a_tags = soup.find_all('a', href=re.compile(href_re))
-
-                if a_tags and len(a_tags):
-                    params['html'] = html
-                    self._html_cursor.insert(params)
-                    self._urlpool.update_success_url(params['url'])
-                    params.pop('html')
-
-                    url_list = []
-                    # 更新链接请求成功
-                    for a in a_tags:
-                        _p = {
-                            '_id': self.url_index,
-                            'type': params['type'],
-                            'url': domain_url + reg(
-                                'content.jsp\?tableId=[0-9]+&tableName=TABLE[0-9]+&tableView=[\u4e00-\u9fa50]+&Id=[0-9]+',
-                                a['href']),
-                            'text': a.text
-                        }
-                        self.url_index += 1
-                        url_list.append(_p)
-                    self._urlpool.save_url(url_list)
-            elif params['url'].__contains__('content.jsp'):
-                tbody = soup.find_all('tbody')
-                if tbody:
-                    params['html'] = html
-                    # 保存html数据
-                    self._html_cursor.save(params)
-                    # 更新数据
-                    self._urlpool.update_success_url(params['url'])
+                url_list = []
+                # 更新链接请求成功
+                for a in a_tags:
+                    url_list.append({
+                        'type': params['type'],
+                        'url': self.__domain_url + reg(
+                            'content.jsp\?tableId=[0-9]+&tableName=TABLE[0-9]+&tableView=[\u4e00-\u9fa50]+&Id=[0-9]+',
+                            a['href']),
+                        'text': a.text,
+                        'tree': 1
+                    })
+                self._urlpool.save_url(url_list)
+        elif params['tree'] == 1:
+            tbody = soup.find_all('tbody')
+            if tbody:
+                pass
             else:
-                logger.error('异常情况：' + params['url'])
+                time.sleep(range(100, 500))
+                return
 
-            d2 = datetime.datetime.now()
-            date = (d2 - d1).total_seconds()
-            # 说明响应变慢了，等等，给服务器减压。
-            if date > 10:
-                time.sleep(250)
-            # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
-            if date < 0.3:
-                time.sleep(250)
-            logger.info('耗时：' + str((d2 - d1).total_seconds()))
+        self.save_html(html, params)
+
+        d2 = datetime.datetime.now()
+        date = (d2 - d1).total_seconds()
+
+        # 说明响应变慢了，等等，给服务器减压。
+        # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
+        if date > 10 or date < 0.3:
+            time.sleep(range(100, 500))
+        logger.info('耗时：' + str(date))
 
     def parser(self):
         logger.info('开始')
@@ -219,6 +193,44 @@ class cfda(BaseCrawler):
 
         self._data_cursor.insert(rows)
         logger.info('结束')
+
+    def parser2(self):
+        """
+        比较原始数据列表上的本位码，是不是跟解析后的本位码一样
+        1. 按照URL查取data，url中查找对应的数据
+        2. 进行比较
+        3. 不相同，那么删除html，更新url.isenable == 1
+        :return:
+        """
+        index = 0
+        for data in self._data_cursor().find():
+            index += 1
+            if index < 0:
+                continue
+            if index % 1000 == 0:
+                print(index)
+            if 'text' not in data:
+                continue
+
+            if ('药品本位码' not in data) or \
+                    (data and not str(data['text']).__contains__(data['药品本位码'])):
+                self._urlpool.update({'_id': data['_id']}, {'isenable': '1'})
+                self._html_cursor.delete_one({'url': data['url']})
+
+    def startup_parser(self):
+        queue = Queue()
+        index = [[0, 65000], [65001, 130000], [13001, 200000]]
+        for i, v in enumerate(index):
+            get_data = GetData(i, queue, self.get_html_cursor(), v)
+            get_data.start()
+            parser = Parser(i, queue, self.get_data_cursor(), self.get_urlpool())
+            parser.start()
+
+        while queue.empty():
+            print(queue.qsize())
+            time.sleep(500)
+
+        IS_OK = True
 
     def to_oracle(self):
         """
@@ -292,44 +304,6 @@ class cfda(BaseCrawler):
         # 插入数据
         self.oralce_cursor.executeSQL(insert_sql)
         logger.info('数据库存储结束')
-
-    def parser2(self):
-        """
-        比较原始数据列表上的本位码，是不是跟解析后的本位码一样
-        1. 按照URL查取data，url中查找对应的数据
-        2. 进行比较
-        3. 不相同，那么删除html，更新url.isenable == 1
-        :return:
-        """
-        index = 0
-        for data in self._data_cursor().find():
-            index += 1
-            if index < 0:
-                continue
-            if index % 1000 == 0:
-                print(index)
-            if 'text' not in data:
-                continue
-
-            if ('药品本位码' not in data) or \
-                    (data and not str(data['text']).__contains__(data['药品本位码'])):
-                self._urlpool.update({'_id': data['_id']}, {'isenable': '1'})
-                self._html_cursor.delete_one({'url': data['url']})
-
-    def startup_parser(self):
-        queue = Queue()
-        index = [[0, 65000], [65001, 130000], [13001, 200000]]
-        for i, v in enumerate(index):
-            get_data = GetData(i, queue, self.get_html_cursor(), v)
-            get_data.start()
-            parser = Parser(i, queue, self.get_data_cursor(), self.get_urlpool())
-            parser.start()
-
-        while queue.empty():
-            print(queue.qsize())
-            time.sleep(500)
-
-        IS_OK = True
 
 
 class Parser(threading.Thread):
@@ -411,10 +385,3 @@ class GetData(threading.Thread):
             if self.__count % 10000 == 0:
                 logger.info(self._thread_name + str(self.__count))
             self.__queue.put(data)
-
-
-if __name__ == '__main__':
-    z = cfda('192.168.5.94')
-    # z.startup_parser()
-    # z.parser()
-    z.to_oracle()
