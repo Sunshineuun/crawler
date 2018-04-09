@@ -2,6 +2,7 @@
 # encoding: utf-8
 # qiushengming-minnie
 # 医学百科
+import re
 from bs4 import Tag
 
 from python.no_work.crawler.base_crawler import BaseCrawler
@@ -72,6 +73,7 @@ class disease(BaseCrawler):
                 elif tag.name == 'h3':
                     key += tag.text
                 elif tag.name in ['p', 'h4']:
+                    key = re.sub('. ', '', key)
                     p[key] += tag.text
                     p[key] += '\n'
             result.append(p)
