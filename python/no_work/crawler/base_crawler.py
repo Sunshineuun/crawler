@@ -4,6 +4,8 @@
 import traceback
 from abc import abstractmethod
 
+from bs4 import BeautifulSoup
+
 from python.no_work.utils.common import getNowDate
 from python.no_work.utils.crawler import Crawler
 from python.no_work.utils.memail import send_mail
@@ -46,10 +48,15 @@ class BaseCrawler(object):
             return
         self._init_url()
 
+    @staticmethod
+    def to_soup(html):
+        return BeautifulSoup(html, 'html.parser')
+
     def __run(self):
         try:
             while not self._urlpool.empty():
                 self.startup()
+            self.parser()
         except BaseException as e:
             send_mail(traceback.format_exc())
 
@@ -82,14 +89,14 @@ class BaseCrawler(object):
     def parser(self):
         pass
 
-    def save_html(self, h, p):
+    def save_html(self, h, p1):
         """
+        存储html，并且更新url状态 \n
         :param h: str
         :param p: 字典
         :return:
         """
-        p['html'] = h
-        p['source'] = self._cn_name
-        p['create_date'] = getNowDate()
+        p = {'html': h, 'source': self._cn_name, 'create_date': getNowDate()}
+        p.update(p1)
         self._html_cursor.save(p)
         self._urlpool.update_success_url(p['url'])
