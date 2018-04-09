@@ -142,7 +142,7 @@ class disease(BaseCrawler):
                         h4 = div.find('h4')
                         t = []
                         for li in div.find_all('li'):
-                            t.append({'name': li['kyinnername'], 'content': li.p.text})
+                            t.append({'name': li['kyinnername'], 'content': li.contents[3].text})
                         t1[h4.text] = t
                     data[a.text] = t1
                     continue
