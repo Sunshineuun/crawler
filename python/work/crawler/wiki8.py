@@ -39,15 +39,14 @@ class disease(BaseCrawler):
             })
         self._urlpool.save_url(result)
 
-    def startup(self):
-        d = self._urlpool.get()
+    def startup(self, d):
         res = self._crawler.get(d['url'])
         if res.status_code != 200:
             return
 
         soup = self.to_soup(res.text)
 
-        # 不是列表的，是详细信息的
+        # 不是列表的，是详细信息的，因为初始化列表中有些是疾病的详细信息，故此需要做出判断。
         if not soup.find('ul', class_='cateList'):
             d['tree'] = 1
 
@@ -61,8 +60,17 @@ class disease(BaseCrawler):
                     'type': self._cn_name,
                     'tree': 1
                 })
+            page = soup.find('ul', class_='page')
+            if page:
+                _a = re.findall('[0-9]+', page.li.text)
+                if _a[1] == '1':
+                    for i in range(2, int(_a[0])+1):
+                        result.append({
+                            'url': d['url'].replace('.html', '_' + str(i) + '.html'),
+                            'type': self._cn_name,
+                            'tree': 0
+                        })
             self._urlpool.save_url(result)
-
         elif d['tree'] == 1:
             # 这里是否需要校验一下，请求的数据是否有效
             pass
@@ -88,6 +96,8 @@ class disease(BaseCrawler):
                     key += tag.text
                 elif tag.name in ['p', 'h4']:
                     key = re.sub('. ', '', key)
+                    if key not in p:
+                        p[key] = ''
                     p[key] += tag.text
                     p[key] += '\n'
             result.append(p)
