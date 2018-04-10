@@ -68,6 +68,9 @@ class BaseCrawler(object):
         except BaseException as e:
             self.log.error(traceback.format_exc())
             send_mail(traceback.format_exc())
+        finally:
+            if self._crawler.driver:
+                self._crawler.driver.quit()
 
     @abstractmethod
     def _init_url(self):
