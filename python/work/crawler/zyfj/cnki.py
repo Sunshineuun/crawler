@@ -258,11 +258,12 @@ class disease_lczl(BaseCrawler):
 
             # 类别->疾病列表->翻页。
             if 'search_url' in d:
-                d.pop('_id')
                 res1 = self._crawler.get(d['search_url'])
+
+                d.pop('_id')
+                d.pop('search_url')
                 for i in range(2, int(res1.json()['total']) + 1):
                     d['url'] = d['url'].replace('page=0', 'page=' + str(i))
-                    d.pop('search_url')
                     urls.append(d)
         elif d['tree'] == 2:
             # 类别->疾病列表->翻页->疾病详细信息
