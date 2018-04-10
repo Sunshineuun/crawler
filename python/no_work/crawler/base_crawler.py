@@ -66,7 +66,7 @@ class BaseCrawler(object):
                 self.log.info('耗时：' + str((d2 - d1).total_seconds()))
             self.parser()
         except BaseException as e:
-            print(traceback.format_exc())
+            self.log.error(traceback.format_exc())
             send_mail(traceback.format_exc())
 
     @abstractmethod
