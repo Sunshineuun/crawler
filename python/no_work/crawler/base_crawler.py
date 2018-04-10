@@ -101,8 +101,8 @@ class BaseCrawler(object):
     def save_html(self, h, p1):
         """
         存储html，并且更新url状态 \n
+        :param p1: 字典
         :param h: str
-        :param p: 字典
         :return:
         """
         p = {'html': h, 'source': self._cn_name, 'create_date': getNowDate()}
