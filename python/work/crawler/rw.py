@@ -3,18 +3,13 @@
 # qiushengming-minnie
 # 人卫助手
 import json
-import random
 
 import requests
 import time
 from bs4 import BeautifulSoup, Tag
 from bson import InvalidDocument
-from requests.exceptions import ChunkedEncodingError, ProxyError
 
 from python.no_work.crawler.base_crawler import BaseCrawler
-from python.no_work.utils import mlogger, PROXY_IP, PROXY_IP2
-
-logger = mlogger.get_defalut_logger('rw.log', 'rw')
 
 
 class disease(BaseCrawler):
@@ -43,10 +38,9 @@ class disease(BaseCrawler):
     def _get_cn_name(self):
         return '人卫助手-疾病'
 
-    def startup(self):
+    def startup(self, d):
         header = {
             'Content-Type': 'application/json',
-            # 'Cookie': 'jeesite.session.id=1ab0769d482c4068bac4d2a6b3ecec74; JSESSIONID=206209EF59D3A574B729D798F1A607B5'
         }
         params = {
             'pageNo': 1,
@@ -57,51 +51,35 @@ class disease(BaseCrawler):
             'symptomsWords': ''
         }
         url1 = 'http://ccdas.ipmph.com/rwDisease/getRwDiseaseDetail?diseaseId={diseaseId}'
-        while not self._urlpool.empty():
-            data = self._urlpool.get()
 
-            time.sleep(2)
+        time.sleep(2)
 
-            if 'pageNo' in data:
-                print(data['pageNo'])
-                params['pageNo'] = data['pageNo']
-                res = requests.post(url=data['url'], data=json.dumps(params), headers=header)
-                if res.status_code == requests.codes.ok:
-                    res_dic = res.json()
-                    try:
-                        url_r = []
-                        for d in res_dic['result']['list']:
-                            d.update({
-                                'url': url1.format(diseaseId=d['diseaseId']),
-                                'type': self._get_cn_name()
-                            })
-                            url_r.append(d)
-                        self._urlpool.save_url(url_r)
-                        self.save_html(h=res.text, p=data)
-                        self._urlpool.update({'_id': data['_id']}, {'$set': {'isenable': '0'}})
-                        url_r.clear()
-                    except BaseException as ex:
-                        logger.error(ex)
-                        logger.error(data)
-            else:
+        if 'pageNo' in d:
+            print(d['pageNo'])
+            params['pageNo'] = d['pageNo']
+            res = requests.post(url=d['url'], data=json.dumps(params), headers=header)
+            if res.status_code == requests.codes.ok:
+                res_dic = res.json()
                 try:
-                    res = requests.get(data['url'], proxies=random.choice(PROXY_IP2))
-                except ChunkedEncodingError as chunkedEncodingError:
-                    logger.error(chunkedEncodingError)
-                    continue
-                except ConnectionResetError as connectionResetError:
-                    # 远程主机强迫关闭了一个现有的连接。
-                    logger.error(connectionResetError)
-                    continue
-                except ProxyError as proxyerror:
-                    logger.error(proxyerror)
-                    continue
-
-                if res.status_code == 200:
-                    data['html'] = res.text
-                    self.save_html(h=res.text, p=data)
-                else:
-                    logger.error(data['url'])
+                    url_r = []
+                    for d in res_dic['result']['list']:
+                        d.update({
+                            'url': url1.format(diseaseId=d['diseaseId']),
+                            'type': self._get_cn_name()
+                        })
+                        url_r.append(d)
+                    self._urlpool.save_url(url_r)
+                    self.save_html(h=res.text, p1=d)
+                    url_r.clear()
+                except BaseException as ex:
+                    self.log.error(ex)
+                    self.log.error(d)
+        else:
+            res = self._crawler.get(d['url'])
+            if res.status_code == 200:
+                self.save_html(h=res.text, p1=d)
+            else:
+                self.log.error(d['url'])
 
     def parser(self):
         """
@@ -147,8 +125,8 @@ class disease(BaseCrawler):
                     p[div.contents[1].text.replace('.', '')] = div.contents[3].text
                 self._data_cursor.insert_one(p)
             except AttributeError as attributeError:
-                logger.error(attributeError)
-                logger.error(d['url'])
+                self.log.error(attributeError)
+                self.log.error(d['url'])
             except InvalidDocument as e:
                 # key '1.诊断' must not contain '.' BSONError;MongoDB插入异常
-                logger.error(e)
+                self.log.error(e)
