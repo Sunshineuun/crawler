@@ -214,7 +214,7 @@ class disease_lczl(BaseCrawler):
         http://lczl.cnki.net/jb/index
     """
     def _get_name(self):
-        return 'cnki_disease'
+        return 'cnki_disease_lczl'
 
     def _get_cn_name(self):
         return '中国知网-疾病'
