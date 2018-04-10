@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # encoding: utf-8
 # qiushengming-minnie
+import datetime
 import traceback
 from abc import abstractmethod
 
 from bs4 import BeautifulSoup
 
+from python.no_work.utils import mlogger
 from python.no_work.utils.common import getNowDate
 from python.no_work.utils.crawler import Crawler
 from python.no_work.utils.memail import send_mail
@@ -17,6 +19,8 @@ class BaseCrawler(object):
     def __init__(self, ip=None):
         if not ip:
             ip = '127.0.0.1'
+
+        self.log = mlogger.mlog
 
         self.__name = self._get_name()
         self._cn_name = self._get_cn_name()
@@ -55,7 +59,11 @@ class BaseCrawler(object):
     def __run(self):
         try:
             while not self._urlpool.empty():
-                self.startup()
+                d1 = datetime.datetime.now()
+                d = self._urlpool.get()
+                self.startup(d)
+                d2 = datetime.datetime.now()
+                self.log.info('耗时：' + str((d2 - d1).total_seconds()))
             self.parser()
         except BaseException as e:
             print(traceback.format_exc())
@@ -83,7 +91,7 @@ class BaseCrawler(object):
         pass
 
     @abstractmethod
-    def startup(self):
+    def startup(self, d):
         pass
 
     @abstractmethod
