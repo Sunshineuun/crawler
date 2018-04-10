@@ -7,14 +7,8 @@ import time
 
 from bs4 import BeautifulSoup
 
-from minnie.crawler.common.Excel import WriteXLSX
-from minnie.crawler.common.Utils import reg
-from python.no_work.utils import mlogger
-from python.no_work.utils.urlpool import URLPool
-from python.no_work.utils.crawler import Crawler
-from python.no_work.utils.mongodb import MongodbCursor
-
-logger = mlogger.get_defalut_logger('cnki_TCM.log', 'cnki_TCM')
+from python.no_work.crawler.base_crawler import BaseCrawler
+from python.no_work.utils.common import reg
 
 
 def zgzw_recur_dic(_result, _code, _p):
@@ -53,7 +47,7 @@ def zgzw_recur_row(dic, s, arr=None):
         arr.append(s + value['name'] + '#')
 
 
-class cnki(object):
+class cnki(BaseCrawler):
     """
     中国知网，中药方剂信息爬取
     方剂目录地址：http://kb.tcm.cnki.net/TCM/TCM/Guide?node=12719&dbcode=zyff
@@ -64,19 +58,11 @@ class cnki(object):
     """
 
     def __init__(self, ip='127.0.0.1'):
-        self.name = 'cnki_zyfj'
-        self.pici = 0
-
-        self.mongo = MongodbCursor(ip)
-        self.urlpool = URLPool(self.mongo, self.name)
-        self.crawler = Crawler()
-
-        self.init_url()
+        super().__init__()
 
     def init_url(self):
         """
         初始化urlpool
-        :param urlpool:
         :return:
         """
         # 12701~12719
@@ -84,34 +70,22 @@ class cnki(object):
         url2 = 'http://kb.tcm.cnki.net/TCM/TCM/GuideMore?node={node}&dbcode=zyff&kind='
         # 存储url到资源池中
         for i in range(1, 20):
-            self.urlpool.save_url(params={
+            self._urlpool.save_url(params={
                 'url': url.format(node=12700 + i),
                 'url2': url2.format(node=12700 + i),
                 'type': '1'
             })
 
-    def save_data(self, html_cursor, url, html):
-        if html_cursor.find({'url': url}).count() <= 0:
-            html_cursor.save({
-                'index': reg(pattern='[0-9]+', s=url),
-                'source': '中国知网-中药方剂',
-                'url': url,
-                'html': html,
-                'pici': '1'
-            })
+    def startup(self, d):
 
-    def request_data(self):
-
-        html_cursor = self.mongo.get_cursor(self.name, 'html')
         url = 'http://kb.tcm.cnki.net/TCM/TCM/NaviItem?code={code}&wd={wd}&stype=&pageNum=1&pageSize=1000&dbcode=zyff&navikind='
 
-        logger.info('第一阶段开始......')
-        while not self.urlpool.empty():
+        while not self._urlpool.empty():
             # 参数获取
-            _params = self.urlpool.get()
+            _params = self._urlpool.get()
 
             if 'url2' not in _params:
-                self.urlpool.put(_params)
+                self._urlpool.put(_params)
                 break
 
             _url = _params['url']
@@ -119,12 +93,12 @@ class cnki(object):
 
             # 请求获取数据
             # html = self.crawler.driver_get_url(_url, check_rule=self.check_rule)
-            html1 = self.crawler.request_get_url(_url).decode('utf-8')
-            html2 = self.crawler.request_get_url(url2).decode('utf-8')
+            html1 = self._crawler.request_get_url(_url).decode('utf-8')
+            html2 = self._crawler.request_get_url(url2).decode('utf-8')
 
             # 校验请求是否有效，无效更新链接地址
             if not (html1 and html2):
-                self.urlpool.update({
+                self._urlpool.update({
                     'url': _params['url']
                 }, {
                     '$set': {
@@ -148,25 +122,25 @@ class cnki(object):
                     'url': url.format(code=reg(pattern='[0-9]+', s=a['href']), wd=a.text),
                     'type': '2'
                 }
-                self.urlpool.put(_params)
+                self._urlpool.put(_params)
 
             # 存储HTML
-            self.save_data(html_cursor, _url, html)
+            self.save_html(html, _params)
 
-            self.urlpool.update_success_url(_params['url'])
+            self._urlpool.update_success_url(_params['url'])
 
-        logger.info('第二阶段开始......')
-        while not self.urlpool.empty():
+        self.log.info('第二阶段开始......')
+        while not self._urlpool.empty():
             # 参数获取
-            _params = self.urlpool.get()
+            _params = self._urlpool.get()
             _url = _params['url']
 
             # 请求获取数据
-            html = self.crawler.request_get_url(_url).decode('utf-8')
+            html = self._crawler.request_get_url(_url).decode('utf-8')
 
             # 存储数据
-            self.save_data(html_cursor, _url, html)
-            self.urlpool.update_success_url(_params['url'])
+            self.save_html(html, _params)
+            self._urlpool.update_success_url(_params['url'])
 
     def parser_1(self):
         """
@@ -174,8 +148,7 @@ class cnki(object):
         字典形式
         :return:
         """
-        zyfz_zw_html_cursor = self.mongo.get_cursor(self.name, 'html')
-        zyfz_zw_html_result = zyfz_zw_html_cursor.find({
+        zyfz_zw_html_result = self._html_cursor.find({
             'url': {
                 '$regex': '127[0-9]{2}&'
             }
@@ -236,13 +209,74 @@ class cnki(object):
         return flag
 
 
-if __name__ == '__main__':
-    # 中国知网-中药方剂解析
-    zgzw = cnki('192.168.16.113')
-    result = zgzw.parser_2()
-    params = {
-        'filename': '中国知网_kb.tcm.cnki.net.xlsx',
-        'data': result
-    }
-    writexlsx = WriteXLSX(path='D://Temp//' + params['filename'])
-    writexlsx.write2(params)
+class disease_lczl(BaseCrawler):
+    """
+        http://lczl.cnki.net/jb/index
+    """
+    def _get_name(self):
+        return 'cnki_disease'
+
+    def _get_cn_name(self):
+        return '中国知网-疾病'
+
+    def _init_url(self):
+        self._urlpool.save_url({
+            'url': 'http://lczl.cnki.net/jb/index',
+            'type': self._cn_name,
+            'tree': 0
+        })
+
+    def startup(self, d):
+        urls = []
+        res = self._crawler.get(d['url'])
+        if res.status_code != 200:
+            return
+        soup = self.to_soup(res.text)
+        if d['tree'] == 0:
+            # 首页->类别
+            getpage_url = 'http://lczl.cnki.net/jb/getpage?page=0&type=类别路径&query={code}&mquery=&isfzzljb='
+            search_url = 'http://lczl.cnki.net/jb/search?type=类别路径&query={code}&mquery=&issearch=0&isfzzljb='
+            for li in soup.find_all('li', class_='fir_list'):
+                urls.append({
+                    'url': getpage_url.format(code=li['code']),
+                    'search_url': search_url.format(code=li['code'], type='search'),
+                    'name': li.a.text,
+                    'type': self._cn_name,
+                    'tree': 1
+                })
+        elif d['tree'] == 1:
+            # 类别->疾病列表
+            url = 'http://lczl.cnki.net/jbdetail/getdata?code={code}'
+            for i in res.json()['list']:
+                urls.append({
+                    'url': url.format(code=i['code']),
+                    'name': i['name'],
+                    'code': i['code'],
+                    'type': self._cn_name,
+                    'tree': 2
+                })
+
+            # 类别->疾病列表->翻页。
+            if 'search_url' in d:
+                res1 = self._crawler.get(d['search_url'])
+                for i in range(2, int(res1.json()['total']) + 1):
+                    d['url'] = d['url'].replace('page=0', 'page=' + str(i))
+                    d.pop('_id')
+                    d.pop('search_url')
+                    urls.append(d)
+        elif d['tree'] == 2:
+            # 类别->疾病列表->翻页->疾病详细信息
+            d.update(res.json())
+            self._data_cursor.insert_one(d)
+            return
+
+        self.save_html(res.text, d)
+        self._urlpool.save_url(urls)
+
+    def parser(self):
+        pass
+
+
+class disease_pmmp(BaseCrawler):
+    # TODO
+    pass
