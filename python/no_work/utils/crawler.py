@@ -18,8 +18,6 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from python.no_work.utils import mlogger, USER_AGENT, PROXY_IP, PROXY_IP2
 from python.no_work.utils.common import getNowDate
 
-logger = mlogger.get_defalut_logger('crawler.log', 'crawler')
-
 
 def getHttpStatus(browser):
     """
@@ -63,6 +61,7 @@ class Crawler(object):
     """
 
     def __init__(self):
+        self.__log = mlogger.mlog
         self.__mongo = pymongo.MongoClient('192.168.16.113', 27017)
         self.__error_cursor = self.__mongo['minnie']['crawler_error']
         # 驱动器地址
@@ -175,7 +174,7 @@ class Crawler(object):
 
     def update_proxy(self):
         proxy_ip = random.choice(PROXY_IP)
-        logger.info(proxy_ip)
+        self.__log.info(proxy_ip)
         # 退出
         if self.driver:
             self.driver.quit()
@@ -222,10 +221,10 @@ class Crawler(object):
             if res.status_code == 200:
                 return res
         except ChunkedEncodingError as chunkedEncodingError:
-            logger.error(chunkedEncodingError)
+            self.__log.error(chunkedEncodingError)
         except ConnectionResetError as connectionResetError:
             # 远程主机强迫关闭了一个现有的连接。
-            logger.error(connectionResetError)
+            self.__log.error(connectionResetError)
         except ProxyError as proxyerror:
-            logger.error(proxyerror)
+            self.__log.error(proxyerror)
         return False
