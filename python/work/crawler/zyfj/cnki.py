@@ -271,10 +271,10 @@ class disease_lczl(BaseCrawler):
             # 类别->疾病列表->翻页->疾病详细信息
             d.update(res.json())
             self._data_cursor.insert_one(d)
-            return
 
         self.save_html(res.text, d)
-        self._urlpool.save_url(urls)
+        if urls:
+            self._urlpool.save_url(urls)
 
     def parser(self):
         pass
