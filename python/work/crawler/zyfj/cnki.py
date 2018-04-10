@@ -262,9 +262,11 @@ class disease_lczl(BaseCrawler):
 
                 d.pop('_id')
                 d.pop('search_url')
-                for i in range(2, int(res1.json()['total']) + 1):
-                    d['url'] = d['url'].replace('page=0', 'page=' + str(i))
-                    urls.append(d)
+                for i in range(2, int(res1.json()['total']) // 10 + 2):
+                    d1 = {}
+                    d1.update(d)
+                    d1['url'] = d['url'].replace('page=0', 'page=' + str(i))
+                    urls.append(d1)
         elif d['tree'] == 2:
             # 类别->疾病列表->翻页->疾病详细信息
             d.update(res.json())
