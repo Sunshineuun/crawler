@@ -120,9 +120,8 @@ class cfda(BaseCrawler):
             cookie += dic['name'] + '=' + dic['value'] + ';'
         return cookie
 
-    def startup(self):
+    def startup(self, params):
         d1 = datetime.datetime.now()
-        params = self._urlpool.get()
         html = self._crawler.driver_get_url(params['url'])
         soup = BeautifulSoup(html, 'html.parser')
         if params['tree'] == 0:
@@ -159,7 +158,6 @@ class cfda(BaseCrawler):
         # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
         if date > 10 or date < 0.3:
             time.sleep(range(100, 500))
-        logger.info('耗时：' + str(date))
 
     def parser(self):
         logger.info('开始')
