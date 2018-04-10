@@ -86,7 +86,12 @@ class disease(BaseCrawler):
                 'name': d['name'],
                 'type': d['type'],
             }
-            for tag in soup.find(id='content').contents:
+            content = soup.find(id='content')
+            if content is None:
+                self.log.error(d['url'])
+                continue
+
+            for tag in content.contents:
                 if type(tag) != Tag or tag.name == 'div':
                     continue
 
@@ -95,7 +100,7 @@ class disease(BaseCrawler):
                 elif tag.name == 'h3':
                     key += tag.text
                 elif tag.name in ['p', 'h4']:
-                    key = re.sub('. ', '', key)
+                    key = re.sub('[. ]', '', key)
                     if key not in p:
                         p[key] = ''
                     p[key] += tag.text
