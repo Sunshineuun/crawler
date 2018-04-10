@@ -11,10 +11,8 @@ from abc import abstractmethod, ABCMeta
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import NoSuchElementException
 from python.no_work.crawler.base_crawler import BaseCrawler
-from python.no_work.utils import mlogger
 from python.no_work.utils.common import getNowDate, reg
 
-logger = mlogger.get_defalut_logger('yaozhi.log', 'yaozhi')
 BASE_DOMAIN = 'https://db.yaozh.com'
 
 
@@ -85,15 +83,15 @@ class yaozh(BaseCrawler):
                 driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/a[1]')
                 break
             except NoSuchElementException:
-                logger.info('登陆中，请等待')
+                self.log.info('登陆中，请等待')
             time.sleep(timeout)
             timeout += 2
 
             if timeout > 10:
-                logger.error('链接超时！！')
+                self.log.error('链接超时！！')
                 return False
 
-        logger.info('登陆成功')
+        self.log.info('登陆成功')
         return True
 
     def check_rule(self, html):
@@ -133,22 +131,22 @@ class yaozh(BaseCrawler):
 
     def check_and_save(self, params, html):
         stat, msg = self.check_rule(html)
-        logger.info(params['url'] + " - " + msg)
+        self.log.info(params['url'] + " - " + msg)
         if stat == 0:
             self.save_html(html, params)
         elif stat == 1:
             params['isenable'] = msg
             self._urlpool.update({'_id': params['_id']}, params)
         elif stat == 2:
-            logger.error(params['url'])
+            self.log.error(params['url'])
             self.logout()
             self.login()
         elif stat == 3:
-            logger.info(params)
+            self.log.info(params)
         elif stat == 4:
             self._crawler.refresh()
 
-    def startup(self):
+    def startup(self, d):
         # 登陆是否成功
         while not self.login():
             time.sleep(10)
@@ -180,7 +178,7 @@ class yaozh(BaseCrawler):
         """
         for i, data in enumerate(self._html_cursor.find()):
             if i % 1000 == 0:
-                logger.info(i)
+                self.log.info(i)
             soup = BeautifulSoup(data['html'], 'html.parser')
             trs = soup.find_all('tr')
             if len(trs):
@@ -195,7 +193,7 @@ class yaozh(BaseCrawler):
                 self._data_cursor.save(row)
             else:
                 self._html_cursor.delete_one({'_id': data['_id']})
-                logger.error(data['url'])
+                self.log.error(data['url'])
                 self._urlpool.update({
                     'url': data['url']
                 }, {
@@ -229,7 +227,7 @@ class yaozh_zy(yaozh):
             })
 
         self._urlpool.save_url(result_list)
-        logger.info('url初始结束！！！')
+        self.log.info('url初始结束！！！')
 
     def test(self):
         pass
@@ -263,7 +261,7 @@ class yaozh_zyfj(yaozh):
                 'type': self._cn_name
             })
         self._urlpool.save_url(result_list)
-        logger.info('url初始结束！！！')
+        self.log.info('url初始结束！！！')
 
     def test(self):
         pass
@@ -293,7 +291,7 @@ class yaozh_interaction(yaozh):
                 'type': self._cn_name
             })
         self._urlpool.save_url(result_list)
-        logger.info('url初始结束！！！')
+        self.log.info('url初始结束！！！')
 
     def check_rule(self, html):
         """
@@ -326,7 +324,7 @@ class yaozh_interaction(yaozh):
                 drug_name = re.sub('[\n\r ]', '', td.text)
             except BaseException as exc:
                 self._html_cursor.delete_one({'_id': data['_id']})
-                logger.error(data['url'])
+                self.log.error(data['url'])
                 self._urlpool.update({
                     'url': data['url']
                 }, {
@@ -346,12 +344,12 @@ class yaozh_interaction(yaozh):
                         try:
                             row[tr.th.text] = re.sub('[\n ]', '', tr.td.text)
                         except AttributeError:
-                            logger.error(data['url'])
+                            self.log.error(data['url'])
 
                     self._data_cursor.insert(row)
                 else:
                     self._html_cursor.delete_one({'_id': data['_id']})
-                    logger.error(data['url'])
+                    self.log.error(data['url'])
                     self._urlpool.update({
                         'url': data['url']
                     }, {
@@ -437,67 +435,66 @@ class yaozh_monitored(yaozh):
             })
 
         self._urlpool.save_url(result_list)
-        logger.info('url初始结束！！！')
+        self.log.info('url初始结束！！！')
 
-    def startup(self):
-        while not self._urlpool.empty():
-            # 获取参数
-            params = self._urlpool.get()
-            # 加载页面
-            html = self._crawler.driver_get_url(params['url'])
-            time.sleep(0.5)
-            # soup化
-            soup = BeautifulSoup(html, 'html.parser')
-            # 获取数据所在位置，进行验证确认。
-            tbody = soup.find_all('tbody')
-            # 校验：校验通过存储数据，继续；校验失败，跳过
-            if tbody and len(tbody) >= 1:
-                # 存储详情页链接，直接存储data中去
-                for tr in tbody[0].find_all('tr'):
-                    p = {
-                        'date': getNowDate(),
-                        'url_': params['url']
-                    }
-                    a = tr.find('a')
-                    if a['href'].__contains__(BASE_DOMAIN):
-                        url = a['href']
-                    else:
-                        url = BASE_DOMAIN + a['href']
-                    p['url'] = url
-                    p['药物名称'] = tr.find('th').text
-
-                    tds = tr.find_all('td')[0:5]
-                    p['药物剂型'] = tds[0].text
-                    p['地域机构'] = tds[1].text
-                    p['日期'] = tds[2].text
-                    p['监管级别'] = tds[3].text
-                    p['政策文件'] = tds[4].text
-
-                    self._data_cursor.insert(p)
-                    # self._urlpool.put(params)
-                self.save_html(h=html, p=params)
-            else:
-                params['isenable'] = '无效链接'
-                # self._urlpool.update({'_id': params['_id']}, params)
-                logger.info(params['url'])
-                continue
-
-            # 如果是第一页的话，需要检测是否还有下一页
-            page = soup.find('span', class_='total-nums')
-            if params['url'].__contains__('?p=1&') and page:
-                count = int(reg('[0-9]+', page.text))
-                url = params['url']
-                if count > 210:
-                    logger.info(url)
-                    page = 8
+    def startup(self, d):
+        # 获取参数
+        params = d
+        # 加载页面
+        html = self._crawler.driver_get_url(params['url'])
+        time.sleep(0.5)
+        # soup化
+        soup = BeautifulSoup(html, 'html.parser')
+        # 获取数据所在位置，进行验证确认。
+        tbody = soup.find_all('tbody')
+        # 校验：校验通过存储数据，继续；校验失败，跳过
+        if tbody and len(tbody) >= 1:
+            # 存储详情页链接，直接存储data中去
+            for tr in tbody[0].find_all('tr'):
+                p = {
+                    'date': getNowDate(),
+                    'url_': params['url']
+                }
+                a = tr.find('a')
+                if a['href'].__contains__(BASE_DOMAIN):
+                    url = a['href']
                 else:
-                    page = count // 30 + 2
-                # 获取page_count，整除+2，因为range[大于等于, 小于]，整除是向下取整
-                for i in range(2, page):
-                    self._urlpool.put({
-                        'url': url.replace('p=1', 'p=' + str(i)),
-                        'type': self._cn_name
-                    })
+                    url = BASE_DOMAIN + a['href']
+                p['url'] = url
+                p['药物名称'] = tr.find('th').text
+
+                tds = tr.find_all('td')[0:5]
+                p['药物剂型'] = tds[0].text
+                p['地域机构'] = tds[1].text
+                p['日期'] = tds[2].text
+                p['监管级别'] = tds[3].text
+                p['政策文件'] = tds[4].text
+
+                self._data_cursor.insert(p)
+                # self._urlpool.put(params)
+            self.save_html(h=html, p1=params)
+        else:
+            params['isenable'] = '无效链接'
+            # self._urlpool.update({'_id': params['_id']}, params)
+            self.log.info(params['url'])
+            return
+
+        # 如果是第一页的话，需要检测是否还有下一页
+        page = soup.find('span', class_='total-nums')
+        if params['url'].__contains__('?p=1&') and page:
+            count = int(reg('[0-9]+', page.text))
+            url = params['url']
+            if count > 210:
+                self.log.info(url)
+                page = 8
+            else:
+                page = count // 30 + 2
+            # 获取page_count，整除+2，因为range[大于等于, 小于]，整除是向下取整
+            for i in range(2, page):
+                self._urlpool.put({
+                    'url': url.replace('p=1', 'p=' + str(i)),
+                    'type': self._cn_name
+                })
 
     def test(self):
         pass
@@ -526,7 +523,7 @@ class yaozh_unlabeleduse(yaozh):
     def _get_cn_name(self):
         return '药智网_超说明书用药'
 
-    def startup(self):
+    def startup(self, d):
         # 登陆是否成功
         while not self.login():
             time.sleep(10)
@@ -536,7 +533,7 @@ class yaozh_unlabeleduse(yaozh):
             index += 1
             if index % 500 == 0:
                 count = self._urlpool.cursor.find({'url_': {'$exists': 'true'}}).count()
-                logger.info('获取数量：' + str(count))
+                self.log.info('获取数量：' + str(count))
                 if count == 1658:
                     break
                 self._crawler.update_proxy()
@@ -572,7 +569,7 @@ class yaozh_unlabeleduse(yaozh):
                     p['批准适应症'] = tds[1].text
 
                     self._urlpool.save_url(p)
-                self.save_html(h=html, p=params)
+                self.save_html(h=html, p1=params)
             else:
                 # 无效链接
                 params['isenable'] = '3'
@@ -585,7 +582,7 @@ class yaozh_unlabeleduse(yaozh):
                 count = int(reg('[0-9]+', page.text))
                 url = params['url']
                 if count > 210:
-                    logger.info(url)
+                    self.log.info(url)
                     page = 8
                 else:
                     page = count // 30 + 2
@@ -623,7 +620,7 @@ class yaozh_unlabeleduse(yaozh):
                     for tr in tbody.find_all('tr'):
                         p[tr.th.text] = tr.td.text
                     self._data_cursor.insert(p)
-                self.save_html(h=html, p=params)
+                self.save_html(h=html, p1=params)
             else:
                 # 无效链接
                 params['isenable'] = '4'
