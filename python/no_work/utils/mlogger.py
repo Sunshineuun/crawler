@@ -7,18 +7,18 @@ import sys
 import os
 
 
-def get_defalut_logger(filename, root):
+def get_defalut_logger():
+    filename = 'D:\Temp\Python_Log\python_log.log'
     # 创建log存储目录
-    bak_path = os.getcwd() + '\\log'
-    if not os.path.exists(bak_path):
+    if not os.path.exists('D:\Temp\Python_Log'):
         print('创建日志文件夹！')
-        os.makedirs('log')
+        os.makedirs('D:\Temp\Python_Log')
 
     # 获取logger实例，如果参数为空则返回root logger
-    logger = logging.getLogger(root)
+    logger = logging.getLogger()
 
     # 指定logger输出格式
-    formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
+    formatter = logging.Formatter('%(asctime)s %(name)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
 
     # 文件日志
     """
@@ -61,26 +61,5 @@ def get_defalut_logger(filename, root):
     return logger
 
 
-class MinnieLogger(object):
-    """
-    logger.error(traceback.format_exc())
-    """
-    def __init__(self):
-        pass
+mlog = get_defalut_logger()
 
-    def error(self, msg):
-        pass
-
-    def info(self, msg):
-        pass
-
-    def debug(self, msg):
-        pass
-
-
-if __name__ == '__main__':
-    logger1 = get_defalut_logger('log/1.log', '1')
-    logger2 = get_defalut_logger('log/2.log', '2')
-    logger1.debug("debug")
-    logger2.debug("bbb")
-    logger1.info("info")
