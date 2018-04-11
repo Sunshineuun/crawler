@@ -213,6 +213,7 @@ class disease_lczl(BaseCrawler):
     """
         http://lczl.cnki.net/jb/index
     """
+
     def _get_name(self):
         return 'cnki_disease_lczl'
 
@@ -281,5 +282,44 @@ class disease_lczl(BaseCrawler):
 
 
 class disease_pmmp(BaseCrawler):
-    # TODO
-    pass
+    def _get_name(self):
+        """
+        cnki_disease_pmmp
+        :return:
+        """
+        return '中国知网_医学知识库_疾病'
+
+    def _get_cn_name(self):
+        return '中国知网_医学知识库_疾病'
+
+    def _init_url(self):
+        result = []
+        for i in range(1, 7001):
+            result.append({
+                'url': 'http://pmmp.cnki.net/Disease/Details.aspx?id={id}'.format(id=i),
+                'type': self._cn_name,
+                'tree': 0
+            })
+
+    def startup(self, d):
+        res = self._crawler.get(d['url'])
+        if res:
+            self.save_html(res.text, d)
+
+    def parser(self, d):
+        soup = self.to_soup(d['html'])
+        tbody = soup.find('tbody')
+        trs = tbody.find_all('tr')
+        p = {
+            'url': d['url']
+        }
+        i = 0
+        while i < len(trs):
+            i += 1
+            tds = trs[i].find_all('td')
+            if len(tds) == 2:
+                p[tds[0].text] = tds[1].text
+            elif len(tds) == 1:
+                i += 1
+                p[tds[0].text] = trs[i].find('td').text
+        self._data_cursor.insert_one(p)
