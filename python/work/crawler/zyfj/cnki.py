@@ -4,6 +4,7 @@
 
 import re
 import time
+import traceback
 
 from bs4 import BeautifulSoup
 
@@ -277,7 +278,7 @@ class disease_lczl(BaseCrawler):
         if urls:
             self._urlpool.save_url(urls)
 
-    def parser(self, d):
+    def parser(self):
         pass
 
 
@@ -306,20 +307,27 @@ class disease_pmmp(BaseCrawler):
         if res:
             self.save_html(res.text, d)
 
-    def parser(self, d):
-        soup = self.to_soup(d['html'])
-        tbody = soup.find('tbody')
-        trs = tbody.find_all('tr')
-        p = {
-            'url': d['url']
-        }
-        i = 0
-        while i < len(trs):
-            i += 1
-            tds = trs[i].find_all('td')
-            if len(tds) == 2:
-                p[tds[0].text] = tds[1].text
-            elif len(tds) == 1:
-                i += 1
-                p[tds[0].text] = trs[i].find('td').text
-        self._data_cursor.insert_one(p)
+    def parser(self):
+        d =None
+        try:
+            for d in self._html_cursor.find():
+                soup = self.to_soup(d['html'])
+                tbody = soup.find('tbody')
+                trs = tbody.find_all('tr')
+                p = {
+                    'url': d['url']
+                }
+                i = 0
+                while i < len(trs):
+                    i += 1
+                    tds = trs[i].find_all('td')
+                    if len(tds) == 2:
+                        p[tds[0].text] = tds[1].text
+                    elif len(tds) == 1:
+                        i += 1
+                        p[tds[0].text] = trs[i].find('td').text
+                self._data_cursor.insert_one(p)
+        except BaseException as e:
+            self.log.error(d)
+            self.log.error(traceback.format_exc())
+            raise BaseException(e)
