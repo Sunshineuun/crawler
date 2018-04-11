@@ -65,8 +65,7 @@ class BaseCrawler(object):
                 self.startup(d)
                 d2 = datetime.datetime.now()
                 self.log.info('耗时：' + str((d2 - d1).total_seconds()))
-            for d in self._html_cursor.find():
-                self.parser(d)
+            self.parser()
         except BaseException as e:
             msg = ''
             msg += traceback.format_exc()
@@ -106,7 +105,7 @@ class BaseCrawler(object):
         pass
 
     @abstractmethod
-    def parser(self, d):
+    def parser(self):
         pass
 
     def save_html(self, h, p1):
