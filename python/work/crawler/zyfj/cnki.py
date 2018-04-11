@@ -269,7 +269,7 @@ class disease_lczl(BaseCrawler):
                     urls.append(d1)
         elif d['tree'] == 2:
             # 类别->疾病列表->翻页->疾病详细信息
-            d.update(res.json())
+            d.update(res.json()['jb'])
             self._data_cursor.insert_one(d)
 
         self.save_html(res.text, d)
