@@ -277,7 +277,7 @@ class disease_lczl(BaseCrawler):
         if urls:
             self._urlpool.save_url(urls)
 
-    def parser(self):
+    def parser(self, d):
         pass
 
 
