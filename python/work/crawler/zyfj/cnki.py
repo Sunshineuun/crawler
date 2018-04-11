@@ -301,6 +301,7 @@ class disease_pmmp(BaseCrawler):
                 'type': self._cn_name,
                 'tree': 0
             })
+        self._urlpool.save_url(result)
 
     def startup(self, d):
         res = self._crawler.get(d['url'])
