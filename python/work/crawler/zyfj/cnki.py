@@ -231,7 +231,7 @@ class disease_lczl(BaseCrawler):
     def startup(self, d):
         urls = []
         res = self._crawler.get(d['url'])
-        if res.status_code != 200:
+        if not res:
             return
         soup = self.to_soup(res.text)
         if d['tree'] == 0:
