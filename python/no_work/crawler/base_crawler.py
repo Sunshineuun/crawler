@@ -57,6 +57,7 @@ class BaseCrawler(object):
         return BeautifulSoup(html, 'html.parser')
 
     def __run(self):
+        d = None
         try:
             while not self._urlpool.empty():
                 d1 = datetime.datetime.now()
@@ -64,10 +65,17 @@ class BaseCrawler(object):
                 self.startup(d)
                 d2 = datetime.datetime.now()
                 self.log.info('耗时：' + str((d2 - d1).total_seconds()))
-            self.parser()
+            for d in self._html_cursor.find():
+                self.parser(d)
         except BaseException as e:
-            self.log.error(traceback.format_exc())
-            send_mail(traceback.format_exc())
+            msg = ''
+            msg += traceback.format_exc()
+            msg += '\n'
+            d.pop('html')
+            msg += str(d)
+
+            send_mail(msg)
+            self.log.error(msg)
         finally:
             if self._crawler.driver:
                 self._crawler.driver.quit()
@@ -98,7 +106,7 @@ class BaseCrawler(object):
         pass
 
     @abstractmethod
-    def parser(self):
+    def parser(self, d):
         pass
 
     def save_html(self, h, p1):
