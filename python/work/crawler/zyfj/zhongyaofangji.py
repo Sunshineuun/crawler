@@ -101,6 +101,7 @@ class zhongyaofangji(BaseCrawler):
                 elif tag.name == 'h2':
                     if 'name' in row:
                         self._data_cursor.save(row)
+                        row.clear()
                     row['name'] = tag.text
                     continue
                 elif tag.name == 'p':
