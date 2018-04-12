@@ -70,7 +70,6 @@ class BaseCrawler(object):
             msg = ''
             msg += traceback.format_exc()
             msg += '\n'
-            d.pop('html')
             msg += str(d)
 
             send_mail(msg)
