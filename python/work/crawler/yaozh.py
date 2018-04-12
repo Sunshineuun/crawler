@@ -24,7 +24,6 @@ class yaozh(BaseCrawler):
 
     def __init__(self, ip=None):
 
-        super().__init__(ip)
         self._users = [{
             'username': 'qiushengming@aliyun.com',
             'pwd': 'qd7qrjm3'
@@ -35,6 +34,7 @@ class yaozh(BaseCrawler):
             'username': '15210506530',
             'pwd': 'a1uj30gb'
         }]
+        super().__init__(ip)
 
     @abstractmethod
     def test(self):
