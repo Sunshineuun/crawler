@@ -89,7 +89,7 @@ class zhongyaofangji(BaseCrawler):
         :return:
         """
         for data in self._html_cursor.find():
-            soup = BeautifulSoup(data['html'], 'lxml')
+            soup = BeautifulSoup(data['html'], 'html.parser')
             divspider = soup.find('div', class_='spider')
             if divspider is None:
                 data.pop('html')
@@ -106,6 +106,8 @@ class zhongyaofangji(BaseCrawler):
                 elif tag.name == 'p':
                     key = reg('【[\u4e00-\u9fa5]+】', tag.text)
                     row[key] = tag.text.replace(key, '')
+
+            self._data_cursor.save(row)
 
     def test(self):
         try:
