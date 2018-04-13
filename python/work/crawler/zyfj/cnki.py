@@ -313,13 +313,13 @@ class disease_pmmp(BaseCrawler):
         try:
             for d in self._html_cursor.find():
                 soup = self.to_soup(d['html'])
-                tbody = soup.find('tbody')
+                tbody = soup.find('table')
                 trs = tbody.find_all('tr')
                 p = {
                     'url': d['url']
                 }
                 i = 0
-                while i < len(trs):
+                while i < len(trs)-2:
                     i += 1
                     tds = trs[i].find_all('td')
                     if len(tds) == 2:
