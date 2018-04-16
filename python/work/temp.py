@@ -153,7 +153,7 @@ if __name__ == '__main__':
     # # cnki1 = cnki.disease_pmmp('192.168.5.94')
     # w = WriteXLSX(path='D://Temp//中国知网医学知识库-疾病.xlsx')
     # w.write('中国知网_医学知识库_疾病', 'data')
-    cnki.operation_pmmp('192.168.5.94').to_excel()
+    # cnki.operation_pmmp('192.168.5.94').to_excel()
 
     cnki.operation_lczl('192.168.5.94').to_excel()
 
