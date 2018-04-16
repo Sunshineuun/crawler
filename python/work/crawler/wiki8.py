@@ -3,6 +3,8 @@
 # qiushengming-minnie
 # 医学百科
 import re
+
+import xlsxwriter
 from bs4 import Tag
 
 from python.no_work.crawler.base_crawler import BaseCrawler
@@ -90,17 +92,17 @@ class disease(BaseCrawler):
             if content is None:
                 self.log.error(d['url'])
                 continue
-
+            print(d['name'])
             for tag in content.contents:
                 if type(tag) != Tag or tag.name == 'div':
                     continue
 
                 if tag.name == 'h2':
-                    key = tag.text
-                elif tag.name == 'h3':
-                    key += tag.text
-                elif tag.name in ['p', 'h4']:
-                    key = re.sub('[. ]', '', key)
+                    key = re.sub('[·' + d['name'].replace('-', '\\-') + ']', '', tag.text)
+                # elif tag.name == 'h3':
+                #     key += tag.text
+                elif tag.name in ['p', 'h4', 'h3']:
+                    key = re.sub('[. 的0-9]', '', key)
                     if key not in p:
                         p[key] = ''
                     p[key] += tag.text

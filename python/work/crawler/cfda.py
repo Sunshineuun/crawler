@@ -11,12 +11,10 @@ from queue import Queue
 from bs4 import BeautifulSoup
 
 from python.no_work.crawler.base_crawler import BaseCrawler
-from python.no_work.utils import mlogger
 from python.no_work.utils.common import reg
 from python.no_work.utils.oracle import OralceCursor
 
 IS_OK = False
-logger = mlogger.get_defalut_logger('cfda.log', 'cfda')
 insert_sql = """
 INSERT INTO KBMS_DFSX_KNOWLEDGE_UP (ID, PRODUCT_NAME, TRAD_NAME, SPEC, PERMIT_NO,
                                     PRODUCTION_UNIT, CLINICAL_STATE, TYPE, IS_ENABLE, IS_SUBMIT)
@@ -160,12 +158,12 @@ class cfda(BaseCrawler):
             time.sleep(range(100, 500))
 
     def parser(self):
-        logger.info('开始')
+        self.log.info('开始')
         query = {'url': {'$regex': 'http:[a-z0-9/.]+content.jsp\?'}}
         rows = []
         for i, data in enumerate(self._html_cursor.find(query)):
             if (i + 1) % 10000 == 0:
-                logger.info(i)
+                self.log.info(i)
                 self._data_cursor.insert(rows)
                 rows.clear()
 
@@ -190,7 +188,7 @@ class cfda(BaseCrawler):
                 self._urlpool.update({'url': data['url']}, {'isenable': '1'})
 
         self._data_cursor.insert(rows)
-        logger.info('结束')
+        self.log.info('结束')
 
     def parser2(self):
         """
@@ -228,14 +226,12 @@ class cfda(BaseCrawler):
             print(queue.qsize())
             time.sleep(500)
 
-        IS_OK = True
-
     def to_oracle(self):
         """
         数据转移到oracle上
         :return:
         """
-        logger.info('数据库存储开始')
+        self.log.info('数据库存储开始')
 
         sql = 'INSERT INTO KBMS_DFSX_KNOWLEDGE_UP_BAK (ID, PRODUCT_NAME, TRAD_NAME, SPEC, ZC_FORM, PERMIT_NO, PRODUCTION_UNIT, CODE_REMARK, TYPE) VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9)'
         params = {
@@ -301,7 +297,7 @@ class cfda(BaseCrawler):
         self.oralce_cursor.executeSQL(update_sql)
         # 插入数据
         self.oralce_cursor.executeSQL(insert_sql)
-        logger.info('数据库存储结束')
+        self.log.info('数据库存储结束')
 
 
 class Parser(threading.Thread):
@@ -330,7 +326,7 @@ class Parser(threading.Thread):
 
             self.__count += 1
             if self.__count % 1000 == 0:
-                logger.info(self._thread_name + str(self.__count))
+                self.log.info(self._thread_name + str(self.__count))
                 self.__cursor.insert(rows)
                 rows.clear()
 
@@ -381,5 +377,5 @@ class GetData(threading.Thread):
         for data in self.__cursor.find(query):
             self.__count += 1
             if self.__count % 10000 == 0:
-                logger.info(self._thread_name + str(self.__count))
+                self.log.info(self._thread_name + str(self.__count))
             self.__queue.put(data)

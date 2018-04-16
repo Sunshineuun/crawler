@@ -103,7 +103,7 @@ class URLPool(object):
         for k, v in query.items():
             if k in update:
                 update.pop(k)
-        return self.cursor.update(query, update)
+        return self.cursor.update(query, update, multi=True)
 
     def update_success_url(self, url):
         return self.cursor.update({

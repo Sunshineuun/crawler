@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils.common import reg
+from python.no_work.utils.excel import WriteXLSX
 
 
 def zgzw_recur_dic(_result, _code, _p):
@@ -283,6 +284,10 @@ class disease_lczl(BaseCrawler):
 
 
 class disease_pmmp(BaseCrawler):
+    """
+        中国知网_医学知识库_疾病
+    """
+
     def _get_name(self):
         """
         cnki_disease_pmmp
@@ -307,11 +312,19 @@ class disease_pmmp(BaseCrawler):
         res = self._crawler.get(d['url'])
         if res:
             self.save_html(res.text, d)
+        else:
+            self._urlpool.update({
+                'url': d['url']
+            }, {
+                '$set': {
+                    'isenable': '2'
+                }
+            })
 
     def parser(self):
-        d =None
-        try:
-            for d in self._html_cursor.find():
+        for d in self._html_cursor.find():
+            try:
+
                 soup = self.to_soup(d['html'])
                 tbody = soup.find('table')
                 trs = tbody.find_all('tr')
@@ -319,7 +332,7 @@ class disease_pmmp(BaseCrawler):
                     'url': d['url']
                 }
                 i = 0
-                while i < len(trs)-2:
+                while i < len(trs) - 2:
                     i += 1
                     tds = trs[i].find_all('td')
                     if len(tds) == 2:
@@ -328,7 +341,214 @@ class disease_pmmp(BaseCrawler):
                         i += 1
                         p[tds[0].text] = trs[i].find('td').text
                 self._data_cursor.insert_one(p)
-        except BaseException as e:
-            self.log.error(d)
-            self.log.error(traceback.format_exc())
-            raise BaseException(e)
+            except BaseException as e:
+                self.log.info(self._urlpool.update({'url': d['url']}, {'$set': {'isenable': '1'}}))
+                self.log.info(self._html_cursor.delete_one({'url': d['url']}))
+                self.log.error(d)
+                self.log.error(traceback.format_exc())
+                raise BaseException(e)
+
+
+class operation_pmmp(BaseCrawler):
+    """
+        中国知网_医学知识库_手术
+    """
+
+    def _get_name(self):
+        return '中国知网_医学知识库_手术'
+
+    def _get_cn_name(self):
+        return '中国知网_医学知识库_手术'
+
+    def _init_url(self):
+        result = []
+        for i in range(1, 3501):
+            result.append({
+                'url': 'http://pmmp.cnki.net/Operation/Details.aspx?id={id}'.format(id=i),
+                'type': self._cn_name,
+                'tree': 0
+            })
+        self._urlpool.save_url(result)
+
+    def startup(self, d):
+        res = self._crawler.get(d['url'])
+        if res:
+            self.save_html(res.text, d)
+        else:
+            self._urlpool.update({
+                'url': d['url']
+            }, {
+                '$set': {
+                    'isenable': '2'
+                }
+            })
+
+    def parser(self):
+        for d in self._html_cursor.find():
+            try:
+                soup = self.to_soup(d['html'])
+                tbody = soup.find('table')
+                trs = tbody.find_all('tr')
+                p = {
+                    'url': d['url']
+                }
+                i = 0
+                while i < len(trs) - 2:
+                    i += 1
+                    tds = trs[i].find_all('td')
+                    if len(tds) == 2:
+                        p[tds[0].text] = tds[1].text
+                    elif len(tds) == 1:
+                        i += 1
+                        p[tds[0].text] = trs[i].find('td').text
+                self._data_cursor.insert_one(p)
+            except BaseException as e:
+                self.log.info(self._urlpool.update({'url': d['url']}, {'$set': {'isenable': '1'}}))
+                self.log.info(self._html_cursor.delete_one({'url': d['url']}))
+                self.log.error(d)
+                self.log.error(traceback.format_exc())
+                # raise BaseException(e)
+
+    def to_excel(self):
+        w = WriteXLSX(path='D://Temp//' + self._get_name() + '.xlsx')
+        w.write(self._get_name(), 'data')
+
+
+class operation_lczl(BaseCrawler):
+    """
+            http://lczl.cnki.net/jb/index
+        """
+
+    def _get_name(self):
+        return '中国知网_临床诊疗知识库_操作规范'
+
+    def _get_cn_name(self):
+        return '中国知网_临床诊疗知识库_操作规范'
+
+    def _init_url(self):
+        self._urlpool.save_url({
+            'url': 'http://lczl.cnki.net/gf/index',
+            'type': self._cn_name,
+            'tree': 0
+        })
+
+    def startup(self, d):
+        urls = []
+        res = self._crawler.get(d['url'])
+        if not res:
+            return
+        soup = self.to_soup(res.text)
+        if d['tree'] == 0:
+            # 首页->类别
+            getpage_url = 'http://lczl.cnki.net/gf/getpage?page=0&type=类别路径&query={code}&mquery='
+            search_url = 'http://lczl.cnki.net/gf/search?type=类别路径&query={code}&mquery='
+            for li in soup.find_all('li', class_='fir_list'):
+                urls.append({
+                    'url': getpage_url.format(code=li['code']),
+                    'search_url': search_url.format(code=li['code'], type='search'),
+                    'name': li.a.text,
+                    'type': self._cn_name,
+                    'tree': 1
+                })
+        elif d['tree'] == 1:
+            # 类别->疾病列表
+            url = 'http://lczl.cnki.net/gfdetail/getdata?code={code}'
+            for i in res.json()['list']:
+                urls.append({
+                    'url': url.format(code=i['code']),
+                    'name': i['name'],
+                    'code': i['code'],
+                    'type': self._cn_name,
+                    'tree': 2
+                })
+
+            # 类别->疾病列表->翻页。
+            if 'search_url' in d:
+                res1 = self._crawler.get(d['search_url'])
+
+                d.pop('_id')
+                d.pop('search_url')
+                for i in range(2, int(res1.json()['total']) // 10 + 2):
+                    d1 = {}
+                    d1.update(d)
+                    d1['url'] = d['url'].replace('page=0', 'page=' + str(i))
+                    urls.append(d1)
+        elif d['tree'] == 2:
+            # 类别->疾病列表->翻页->疾病详细信息
+            d.update(res.json()['jb'])
+            self._data_cursor.insert_one(d)
+
+        self.save_html(res.text, d)
+        if urls:
+            self._urlpool.save_url(urls)
+
+    def parser(self):
+        pass
+
+    def to_excel(self):
+        w = WriteXLSX(path='D://Temp//' + self._get_name() + '.xlsx')
+        w.write(self._get_name(), 'data')
+
+
+class diagnostic_examination(BaseCrawler):
+    """
+        辅助检查库
+    """
+    def _get_name(self):
+        return '中国医学知识库_辅助检查库'
+
+    def _get_cn_name(self):
+        return '中国医学知识库_辅助检查库'
+
+    def _init_url(self):
+        result = []
+        for i in range(1, 1160):
+            result.append({
+                'url': 'http://pmmp.cnki.net/DiagnosticExamination/Details.aspx?id={id}'.format(id=i),
+                'type': self._cn_name,
+                'tree': 0
+            })
+        self._urlpool.save_url(result)
+
+    def startup(self, d):
+        res = self._crawler.get(d['url'])
+        if res:
+            self.save_html(res.text, d)
+        else:
+            self._urlpool.update({
+                'url': d['url']
+            }, {
+                '$set': {
+                    'isenable': '2'
+                }
+            })
+
+    def parser(self):
+        for d in self._html_cursor.find():
+            try:
+                soup = self.to_soup(d['html'])
+                tbody = soup.find('table')
+                trs = tbody.find_all('tr')
+                p = {
+                    'url': d['url']
+                }
+                i = 0
+                while i < len(trs) - 2:
+                    i += 1
+                    tds = trs[i].find_all('td')
+                    if len(tds) == 2:
+                        p[tds[0].text] = tds[1].text
+                    elif len(tds) == 1:
+                        i += 1
+                        p[tds[0].text] = trs[i].find('td').text
+                self._data_cursor.insert_one(p)
+            except BaseException as e:
+                self.log.info(self._urlpool.update({'url': d['url']}, {'$set': {'isenable': '1'}}))
+                self.log.info(self._html_cursor.delete_one({'url': d['url']}))
+                self.log.error(d)
+                self.log.error(traceback.format_exc())
+                # raise BaseException(e)
+
+    def to_excel(self):
+        w = WriteXLSX(path='D://Temp//' + self._get_name() + '.xlsx')
+        w.write(self._get_name(), 'data')
