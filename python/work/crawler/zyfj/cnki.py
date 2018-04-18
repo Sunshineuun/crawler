@@ -322,23 +322,28 @@ class disease_pmmp(BaseCrawler):
             })
 
     def parser(self):
-        for d in self._html_cursor.find():
-            try:
+        exclude_url = []
+        for d in self._data_cursor.find():
+            exclude_url.append(d['url'])
 
+        for d in self._html_cursor.find({'url': {'$in': exclude_url}}):
+            try:
                 soup = self.to_soup(d['html'])
                 tbody = soup.find('table')
                 trs = tbody.find_all('tr')
                 p = {
                     'url': d['url']
                 }
-                i = 0
-                while i < len(trs) - 2:
+                i = -1
+                while True:
                     i += 1
                     tds = trs[i].find_all('td')
                     if len(tds) == 2:
                         p[tds[0].text] = tds[1].text
                     elif len(tds) == 1:
                         i += 1
+                        if i >= len(trs):
+                            break
                         p[tds[0].text] = trs[i].find('td').text
                 self._data_cursor.insert_one(p)
             except BaseException as e:
@@ -384,7 +389,11 @@ class operation_pmmp(BaseCrawler):
             })
 
     def parser(self):
-        for d in self._html_cursor.find():
+        exclude_url = []
+        for d in self._data_cursor.find():
+            exclude_url.append(d['url'])
+
+        for d in self._html_cursor.find({'url': {'$in': exclude_url}}):
             try:
                 soup = self.to_soup(d['html'])
                 tbody = soup.find('table')
@@ -392,14 +401,16 @@ class operation_pmmp(BaseCrawler):
                 p = {
                     'url': d['url']
                 }
-                i = 0
-                while i < len(trs) - 2:
+                i = -1
+                while True:
                     i += 1
                     tds = trs[i].find_all('td')
                     if len(tds) == 2:
                         p[tds[0].text] = tds[1].text
                     elif len(tds) == 1:
                         i += 1
+                        if i >= len(trs):
+                            break
                         p[tds[0].text] = trs[i].find('td').text
                 self._data_cursor.insert_one(p)
             except BaseException as e:
@@ -494,6 +505,7 @@ class diagnostic_examination(BaseCrawler):
     """
         辅助检查库
     """
+
     def _get_name(self):
         return '中国医学知识库_辅助检查库'
 
@@ -533,13 +545,15 @@ class diagnostic_examination(BaseCrawler):
                     'url': d['url']
                 }
                 i = 0
-                while i < len(trs) - 2:
+                while True:
                     i += 1
                     tds = trs[i].find_all('td')
                     if len(tds) == 2:
                         p[tds[0].text] = tds[1].text
                     elif len(tds) == 1:
                         i += 1
+                        if i >= len(trs):
+                            break
                         p[tds[0].text] = trs[i].find('td').text
                 self._data_cursor.insert_one(p)
             except BaseException as e:
