@@ -3,10 +3,8 @@
 # qiushengming-minnie
 
 import datetime
-import threading
 import time
 import re
-from queue import Queue
 
 from bs4 import BeautifulSoup
 
@@ -21,18 +19,18 @@ SELECT *
 FROM (
   SELECT
     T2.ID                                                                                                ID,
-    DECODE(T1.PRODUCT_NAME, T2.PRODUCT_NAME, ('_' || T2.PRODUCT_NAME), NULL, ('_' || T2.PRODUCT_NAME),
+    DECODE(T1.PRODUCT_NAME, '', ('_' || T2.PRODUCT_NAME), T2.PRODUCT_NAME, ('_' || T2.PRODUCT_NAME), NULL, ('_' || T2.PRODUCT_NAME),
            ('#_' || T1.PRODUCT_NAME))                                                                    PRODUCT_NAME,
 --       T1.PRODUCT_NAME CFDA产品名称, T2.PRODUCT_NAME 药品列表产品名称,
-    DECODE(T1.TRAD_NAME, T2.TRAD_NAME, ('_' || T2.TRAD_NAME), NULL, ('_' || T2.TRAD_NAME),
+    DECODE(T1.TRAD_NAME, '', ('_' || T2.TRAD_NAME), T2.TRAD_NAME, ('_' || T2.TRAD_NAME), NULL, ('_' || T2.TRAD_NAME),
            ('#_' || T1.TRAD_NAME))                                                                       TRAD_NAME,
 --       T1.TRAD_NAME CFDA商品名称, T2.TRAD_NAME 药品列表商品名称,
-    DECODE(T1.SPEC, T2.SPEC, ('_' || T2.SPEC), NULL, ('_' || T2.SPEC), ('#_' || T1.SPEC))                SPEC,
+    DECODE(T1.SPEC, '', ('_' || T2.SPEC), T2.SPEC, ('_' || T2.SPEC), NULL, ('_' || T2.SPEC), ('#_' || T1.SPEC))                SPEC,
 --       T1.SPEC CFDA规格, T2.SPEC 药品列表规格,
-    DECODE(T1.PERMIT_NO, T2.PERMIT_NO, ('_' || T2.PERMIT_NO), NULL, ('_' || T2.PERMIT_NO),
+    DECODE(T1.PERMIT_NO, '', ('_' || T2.PERMIT_NO), T2.PERMIT_NO, ('_' || T2.PERMIT_NO), NULL, ('_' || T2.PERMIT_NO),
            ('#_' || T1.PERMIT_NO))                                                                       PERMIT_NO,
 --       T1.PERMIT_NO CFDA批准文号, T2.PERMIT_NO 药品列表批准文号,
-    DECODE(T1.PRODUCTION_UNIT, T2.PRODUCTION_UNIT, ('_' || T2.PRODUCTION_UNIT), NULL,
+    DECODE(T1.PRODUCTION_UNIT, '', ('_' || T2.PRODUCTION_UNIT), T2.PRODUCTION_UNIT, ('_' || T2.PRODUCTION_UNIT), NULL,
            ('_' || T2.PRODUCTION_UNIT), ('#_' ||
                                          T1.PRODUCTION_UNIT))                                            PRODUCTION_UNIT,
 --       T1.PRODUCTION_UNIT CFDA生产单位, T2.PRODUCTION_UNIT 药品列表生产单位,
@@ -54,6 +52,7 @@ WHERE PRODUCT_NAME LIKE '#%'
       OR PERMIT_NO LIKE '#%'
       OR PRODUCTION_UNIT LIKE '#%'
       OR CLINICAL_STATE LIKE '#%'
+
 """
 update_sql = """
 UPDATE KBMS_DFSX_KNOWLEDGE_UP SET IS_ENABLE = '5' WHERE IS_ENABLE = '1'
