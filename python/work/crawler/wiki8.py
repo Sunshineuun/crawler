@@ -8,6 +8,7 @@ import xlsxwriter
 from bs4 import Tag
 
 from python.no_work.crawler.base_crawler import BaseCrawler
+from python.no_work.utils.common import remove_blank
 from python.no_work.utils.excel import WriteXLSXCustom
 
 
@@ -147,7 +148,7 @@ class disease(BaseCrawler):
                 col = ''
                 for k1 in [k] + v:
                     if k1 in d:
-                        col += k1 + ':' + re.sub('[ \n\r]', '', d[k1]) + '\n'
+                        col += k1 + ':' + remove_blank(d[k1]) + '\n'
                 row.append(col)
             write.write(rowindex=rowindex, data=row)
         write.close()
