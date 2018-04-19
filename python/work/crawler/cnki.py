@@ -9,8 +9,8 @@ import traceback
 from bs4 import BeautifulSoup
 
 from python.no_work.crawler.base_crawler import BaseCrawler
-from python.no_work.utils.common import reg
-from python.no_work.utils.excel import WriteXLSX
+from python.no_work.utils.common import reg, remove_blank
+from python.no_work.utils.excel import WriteXLSX, WriteXLSXCustom
 
 
 def zgzw_recur_dic(_result, _code, _p):
@@ -49,7 +49,7 @@ def zgzw_recur_row(dic, s, arr=None):
         arr.append(s + value['name'] + '#')
 
 
-class cnki(BaseCrawler):
+class cnki_zyfj(BaseCrawler):
     """
     中国知网，中药方剂信息爬取
     方剂目录地址：http://kb.tcm.cnki.net/TCM/TCM/Guide?node=12719&dbcode=zyff
@@ -503,7 +503,8 @@ class operation_lczl(BaseCrawler):
 
 class diagnostic_examination(BaseCrawler):
     """
-        辅助检查库
+        名称：中国知网_医学知识库_辅助检查库
+        URL：http://pmmp.cnki.net/DiagnosticExamination/Details.aspx?id=1
     """
 
     def _get_name(self):
@@ -566,3 +567,97 @@ class diagnostic_examination(BaseCrawler):
     def to_excel(self):
         w = WriteXLSX(path='D://Temp//' + self._get_name() + '.xlsx')
         w.write(self._get_name(), 'data')
+
+
+class auxiliary_examination_lczl(BaseCrawler):
+    """
+        名称：中国知网_诊疗知识库_辅助检查
+        URL：http://lczl.cnki.net/jc/index
+    """
+
+    def _get_cn_name(self):
+        return '中国知网_诊疗知识库_辅助检查'
+
+    def _get_name(self):
+        return '中国知网_诊疗知识库_辅助检查'
+
+    def _init_url(self):
+        self._urlpool.save_url({
+            'url': 'http://lczl.cnki.net/jc/index',
+            'type': self._cn_name,
+            'tree': 0
+        })
+
+    def startup(self, d):
+        urls = []
+        res = self._crawler.get(d['url'])
+        if not res:
+            return
+        soup = self.to_soup(res.text)
+        if d['tree'] == 0:
+            # 首页->类别
+            getpage_url = 'http://lczl.cnki.net/jc/getpage?page=0&type=类别路径&query={code}&mquery='
+            search_url = 'http://lczl.cnki.net/jc/search?type=类别路径&query={code}&mquery='
+            for li in soup.find_all('li', class_='fir_list'):
+                urls.append({
+                    'url': getpage_url.format(code=li['code']),
+                    'search_url': search_url.format(code=li['code'], type='search'),
+                    'name': li.a.text,
+                    'type': self._cn_name,
+                    'tree': 1
+                })
+        elif d['tree'] == 1:
+            # 类别->疾病列表
+            url = 'http://lczl.cnki.net/jcdetail/getdata?code={code}'
+            for i in res.json()['list']:
+                urls.append({
+                    'url': url.format(code=i['code']),
+                    'name': i['name'],
+                    'code': i['code'],
+                    'type': self._cn_name,
+                    'tree': 2
+                })
+
+            # 类别->检查列表->翻页。
+            if 'search_url' in d:
+                res1 = self._crawler.get(d['search_url'])
+
+                d.pop('_id')
+                d.pop('search_url')
+                for i in range(2, int(res1.json()['total']) // 10 + 2):
+                    d1 = {}
+                    d1.update(d)
+                    d1['url'] = d['url'].replace('page=0', 'page=' + str(i))
+                    urls.append(d1)
+        elif d['tree'] == 2:
+            # 类别->检查列表->翻页->检查详细信息
+            d.update(res.json()['jb'])
+            self._data_cursor.insert_one(d)
+
+        self.save_html(res.text, d)
+        if urls:
+            self._urlpool.save_url(urls)
+
+    def parser(self):
+        pass
+
+    def to_excel(self):
+        write = WriteXLSXCustom(self._get_cn_name())
+        title = []
+
+        rowindex = 0
+        for d in self._data_cursor.find():
+            if rowindex == 0:
+                # write title
+                title += list(d.keys())
+                write.write(rowindex=rowindex, data=title)
+
+            rowindex += 1
+            row = []
+            for k in title:
+                if k in d and d[k]:
+                    soup = BeautifulSoup(d[k], 'html.parser')
+                    row.append(remove_blank(soup.text))
+
+            write.write(rowindex, row)
+        write.close()
