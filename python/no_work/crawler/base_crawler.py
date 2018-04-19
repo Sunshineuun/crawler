@@ -22,6 +22,7 @@ class BaseCrawler(object):
     2. 下载策略，需要针对不同站点进行。默认遍历链接池
     3. 脏URL过滤策略，在什么样子的情况下废弃掉该URL。默认请求失败就废弃
     4. 解析策略
+        4.1 解析成功需要更新下
     5. 对外结构化策略，主要是将导入的excel中，\n
         但是这里有个问题，如果站点庞杂，所产生的属性会比较多。
     """
@@ -139,3 +140,9 @@ class BaseCrawler(object):
         :return:
         """
         pass
+
+    def get_title(self):
+        title = []
+        for d in self._data_cursor.find():
+            title += list(set(list(d.keys())).difference(set(title)))
+        print(title)
