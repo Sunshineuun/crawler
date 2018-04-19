@@ -67,8 +67,13 @@ class BaseCrawler(object):
 
     def __run(self):
         d = None
+        count = 0
         try:
             while not self._urlpool.empty():
+                if count % 500 == 0:
+                    self.log.info('已请求的URL数量：' + str(count))
+
+                count += 1
                 d1 = datetime.datetime.now()
                 d = self._urlpool.get()
                 self.startup(d)
