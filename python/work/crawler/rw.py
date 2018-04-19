@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup, Tag
 from bson import InvalidDocument
 
 from python.no_work.crawler.base_crawler import BaseCrawler
+from python.no_work.utils.excel import WriteXLSXCustom
 
 
 class disease(BaseCrawler):
@@ -76,10 +77,16 @@ class disease(BaseCrawler):
                     self.log.error(d)
         else:
             res = self._crawler.get(d['url'])
-            if res.status_code == 200:
+            if res:
                 self.save_html(h=res.text, p1=d)
             else:
-                self.log.error(d['url'])
+                self._urlpool.update({
+                    'url': d['url']
+                }, {
+                    '$set': {
+                        'isenable': '2'
+                    }
+                })
 
     def parser(self):
         """
@@ -130,3 +137,24 @@ class disease(BaseCrawler):
             except InvalidDocument as e:
                 # key '1.诊断' must not contain '.' BSONError;MongoDB插入异常
                 self.log.error(e)
+
+    def to_excel(self):
+        write = WriteXLSXCustom(self._get_cn_name())
+        rowindex = -4
+        for data in self._data_cursor.find():
+            rowindex += 3
+            row1 = []
+            row2 = []
+            for k in ['regex']:
+                row1.append(k)
+                row2.append(data[k])
+
+            for k, v in data.items():
+                if not v or str(k).__contains__('一篇') \
+                        or str(k).__contains__('阅读：') \
+                        or k in ['_id', 'regex', 'key']:
+                    continue
+                row1.append(k)
+                row2.append(str(v))
+            write.write(rowindex=rowindex + 1, data=row1)
+            write.write(rowindex=rowindex + 2, data=row2)
