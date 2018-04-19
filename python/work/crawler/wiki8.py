@@ -188,6 +188,7 @@ class operation(BaseCrawler):
             for a in a_tags:
                 result.append({
                     'url': DOMINA + a['href'],
+                    'page_url': d['url'],
                     'name': a.text,
                     'type': self._cn_name,
                     'tree': 1
