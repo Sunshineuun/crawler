@@ -230,4 +230,6 @@ class Crawler(object):
             self.__log.error(proxyerror)
         except ConnectionError as connectionError:
             self.__log.error(connectionError)
+        except BaseException:
+            self.__log.error(traceback.format_exc())
         return False
