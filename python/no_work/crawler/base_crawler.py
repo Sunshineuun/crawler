@@ -16,6 +16,15 @@ from python.no_work.utils.urlpool import URLPool
 
 
 class BaseCrawler(object):
+    """
+    所需要具备的功能
+    1. 初始化url，需要针对不同站点进行
+    2. 下载策略，需要针对不同站点进行。默认遍历链接池
+    3. 脏URL过滤策略，在什么样子的情况下废弃掉该URL。默认请求失败就废弃
+    4. 解析策略
+    5. 对外结构化策略，主要是将导入的excel中，\n
+        但是这里有个问题，如果站点庞杂，所产生的属性会比较多。
+    """
     def __init__(self, ip=None):
         if not ip:
             ip = '127.0.0.1'
@@ -118,3 +127,10 @@ class BaseCrawler(object):
         p.update(p1)
         self._html_cursor.save(p)
         self._urlpool.update_success_url(p['url'])
+
+    def to_excel(self):
+        """
+
+        :return:
+        """
+        pass
