@@ -14,6 +14,7 @@ from requests.exceptions import ProxyError, ChunkedEncodingError
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from urllib3 import HTTPSConnectionPool
 
 from python.no_work.utils import mlogger, USER_AGENT, PROXY_IP, PROXY_IP2
 from python.no_work.utils.common import getNowDate
@@ -227,4 +228,6 @@ class Crawler(object):
             self.__log.error(connectionResetError)
         except ProxyError as proxyerror:
             self.__log.error(proxyerror)
+        except ConnectionError as connectionError:
+            self.__log.error(connectionError)
         return False
