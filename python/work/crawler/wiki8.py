@@ -147,12 +147,9 @@ class disease(BaseCrawler):
                 col = ''
                 for k1 in [k] + v:
                     if k1 in d:
-                        col += k1 + ':' + self.remove_blank(d[k1]) + '\n'
+                        col += k1 + ':' + re.sub('[ \n\r]', '', d[k1]) + '\n'
                 row.append(col)
             write.write(rowindex=rowindex, data=row)
-
-    @staticmethod
-    def remove_blank(s):
-        return re.sub('[ \n\r]', '', s)
+        write.close()
 
 
