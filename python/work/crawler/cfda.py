@@ -14,7 +14,6 @@ from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils.common import reg
 from python.no_work.utils.oracle import OralceCursor
 
-IS_OK = False
 insert_sql = """
 INSERT INTO KBMS_DFSX_KNOWLEDGE_UP (ID, PRODUCT_NAME, TRAD_NAME, SPEC, PERMIT_NO,
                                     PRODUCTION_UNIT, CLINICAL_STATE, TYPE, IS_ENABLE, IS_SUBMIT)
@@ -59,6 +58,16 @@ WHERE PRODUCT_NAME LIKE '#%'
 update_sql = """
 UPDATE KBMS_DFSX_KNOWLEDGE_UP SET IS_ENABLE = '5' WHERE IS_ENABLE = '1'
 """
+
+ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', '化学药品', '医用气体', '医用气体(气态氧)',
+         '其他', '气态', '液态和气态', '非剂型', '气态 液态', '体外诊断试剂', '鼻用制剂', '液态气体',
+         '非制剂,其他:氧', '液态', '氧(气态、液态)', '液体	', '气剂', '液态氧', '气体、液态',
+         '医用氧(液态)', '有效成份', '液态空气', '吸入性气体', '氧', '医用氧气', '氧气', '医用氧(气态、液态)',
+         '呼吸', '其他:医用氧(气态)', '有效部位', '制剂中间体', '放免药盒', '药用辅料', '原料', '辅料',
+         '特殊药用辅料', '颗粒剂(制剂中间体)', '制剂中间体水包衣颗粒', '制剂用中间体', '特殊辅料', '放射性密封源',
+         '制剂:密封源', '放射性密封籽源', '药用辅料(供注射用)', '药用特殊辅料', '非制剂:辅料', '原料呀', '新辅料'
+         ]
+PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医用氧气', '医用氧(液态)']
 
 
 class cfda(BaseCrawler):
@@ -112,12 +121,6 @@ class cfda(BaseCrawler):
                 result.append(p1)
         self._urlpool.save_url(result)
 
-    def get_cookie(self):
-        cookie = ''
-        for dic in self._crawler.driver.get_cookies():
-            cookie += dic['name'] + '=' + dic['value'] + ';'
-        return cookie
-
     def startup(self, params):
         d1 = datetime.datetime.now()
         html = self._crawler.driver_get_url(params['url'])
@@ -151,7 +154,6 @@ class cfda(BaseCrawler):
 
         d2 = datetime.datetime.now()
         date = (d2 - d1).total_seconds()
-
         # 说明响应变慢了，等等，给服务器减压。
         # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
         if date > 10 or date < 0.3:
@@ -160,19 +162,16 @@ class cfda(BaseCrawler):
     def parser(self):
         self.log.info('开始')
         query = {'url': {'$regex': 'http:[a-z0-9/.]+content.jsp\?'}}
-        rows = []
-        for i, data in enumerate(self._html_cursor.find(query)):
+        for i, d in enumerate(self._html_cursor.find(query)):
             if (i + 1) % 10000 == 0:
                 self.log.info(i)
-                self._data_cursor.insert(rows)
-                rows.clear()
 
-            soup = BeautifulSoup(data['html'], 'html.parser')
+            soup = BeautifulSoup(d['html'], 'html.parser')
             tr_tags = soup.find_all('tr')[1:-3]
             row = {
-                '_id': data['_id'],
-                'url': data['url'],
-                'text': data['text']
+                '_id': d['_id'],
+                'url': d['url'],
+                'text': d['text']
             }
             for tr in tr_tags:
                 text = tr.text.split('\n')
@@ -181,14 +180,12 @@ class cfda(BaseCrawler):
                 row[text[1]] = text[2]
 
             # 数据有效加入，数据无效进行更新
-            if data['text'].__contains__(row['药品本位码']):
-                rows.append(row)
+            if d['text'].__contains__(row['药品本位码']):
+                self._data_cursor.insert(row)
+                self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
             else:
-                print(data['url'])
-                self._urlpool.update({'url': data['url']}, {'isenable': '1'})
-
-        self._data_cursor.insert(rows)
-        self.log.info('结束')
+                self._urlpool.update({'url': d['url']}, {'isenable': '1'})
+                self._html_cursor.delete_one({'url': d['url']})
 
     def parser2(self):
         """
@@ -213,19 +210,6 @@ class cfda(BaseCrawler):
                 self._urlpool.update({'_id': data['_id']}, {'isenable': '1'})
                 self._html_cursor.delete_one({'url': data['url']})
 
-    def startup_parser(self):
-        queue = Queue()
-        index = [[0, 65000], [65001, 130000], [13001, 200000]]
-        for i, v in enumerate(index):
-            get_data = GetData(i, queue, self.get_html_cursor(), v)
-            get_data.start()
-            parser = Parser(i, queue, self.get_data_cursor(), self.get_urlpool())
-            parser.start()
-
-        while queue.empty():
-            print(queue.qsize())
-            time.sleep(500)
-
     def to_oracle(self):
         """
         数据转移到oracle上
@@ -246,16 +230,6 @@ class cfda(BaseCrawler):
         }
         params1 = ['ID', 'PRODUCT_NAME', 'TRAD_NAME', 'SPEC', 'ZC_FORM', 'PERMIT_NO',
                    'PRODUCTION_UNIT', 'CODE']
-
-        ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', '化学药品', '医用气体', '医用气体(气态氧)',
-                 '其他', '气态', '液态和气态', '非剂型', '气态 液态', '体外诊断试剂', '鼻用制剂', '液态气体',
-                 '非制剂,其他:氧', '液态', '氧(气态、液态)', '液体	', '气剂', '液态氧', '气体、液态',
-                 '医用氧(液态)', '有效成份', '液态空气', '吸入性气体', '氧', '医用氧气', '氧气', '医用氧(气态、液态)',
-                 '呼吸', '其他:医用氧(气态)', '有效部位', '制剂中间体', '放免药盒', '药用辅料', '原料', '辅料',
-                 '特殊药用辅料', '颗粒剂(制剂中间体)', '制剂中间体水包衣颗粒', '制剂用中间体', '特殊辅料', '放射性密封源',
-                 '制剂:密封源', '放射性密封籽源', '药用辅料(供注射用)', '药用特殊辅料', '非制剂:辅料', '原料呀', '新辅料'
-                 ]
-        PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医用氧气', '医用氧(液态)']
 
         # 循环记录
         for data in self._data_cursor.find():
@@ -298,84 +272,3 @@ class cfda(BaseCrawler):
         # 插入数据
         self.oralce_cursor.executeSQL(insert_sql)
         self.log.info('数据库存储结束')
-
-
-class Parser(threading.Thread):
-    def __init__(self, thread_name, _queue, cursor, urlpool):
-        threading.Thread.__init__(self)
-        self._thread_name = '解析线程-' + str(thread_name) + ' -- '
-        self.__queue = _queue  # _queue
-        self.__cursor = cursor
-        self.__urlpool = urlpool
-        self.__count = 1
-
-    def run(self):
-        """
-        :return:
-        """
-        rows = []
-        while True:
-            if self.__queue.empty():
-                time.sleep(30)
-            data = self.__queue.get()
-            row = {
-                '_id': data['_id'],
-                'url': data['url'],
-                'text': data['text']
-            }
-
-            self.__count += 1
-            if self.__count % 1000 == 0:
-                self.log.info(self._thread_name + str(self.__count))
-                self.__cursor.insert(rows)
-                rows.clear()
-
-            soup = BeautifulSoup(data['html'], 'html.parser')
-            tr_tags = soup.find_all('tr')[1:-3]
-
-            for tr in tr_tags:
-                text = tr.text.split('\n')
-                if len(text) < 3:
-                    continue
-                row[text[1]] = text[2]
-
-            # 数据有效加入，数据无效进行更新
-            if data['text'].__contains__(row['药品本位码']):
-                rows.append(row)
-            else:
-                print(data['url'])
-                # self.__urlpool.update({'url': data['url']}, {'isenable': '1'})
-
-            if IS_OK:
-                break
-
-        self.__cursor.insert(rows)
-
-
-class GetData(threading.Thread):
-    def __init__(self, thread_name, queue, cursor, index):
-        """
-        :param queue: 存储队列
-        :param cursor:  数据获取游标
-        :param index: 数据获取起始结束为止
-        """
-        super().__init__()
-        self._thread_name = '取数据线程-' + str(thread_name) + ' -- '
-        self.__queue = queue
-        self.__cursor = cursor
-        self.__start_index = int(index[0])
-        self.__end_index = int(index[1])
-        self.__count = 1
-
-    def run(self):
-        query = {
-            '_id': {
-                '$gt': self.__start_index,
-                '$lt': self.__end_index
-            }
-        }
-        for data in self.__cursor.find(query):
-            self.__count += 1
-            if self.__count % 10000 == 0:
-                self.log.info(self._thread_name + str(self.__count))
-            self.__queue.put(data)
