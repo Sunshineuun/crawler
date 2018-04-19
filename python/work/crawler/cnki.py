@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils.common import reg, remove_blank
-from python.no_work.utils.excel import WriteXLSX, WriteXLSXCustom
+from python.no_work.utils.excel import WriteXLSXCustom
 
 
 def zgzw_recur_dic(_result, _code, _p):
@@ -213,14 +213,16 @@ class cnki_zyfj(BaseCrawler):
 
 class disease_lczl(BaseCrawler):
     """
-        http://lczl.cnki.net/jb/index
+        名称：中国知网_临床诊疗_疾病
+        URL：http://lczl.cnki.net/jb/index
+        状态：完成
     """
 
     def _get_name(self):
         return 'cnki_disease_lczl'
 
     def _get_cn_name(self):
-        return '中国知网-疾病'
+        return '中国知网_临床诊疗知识库_疾病'
 
     def _init_url(self):
         self._urlpool.save_url({
@@ -282,10 +284,62 @@ class disease_lczl(BaseCrawler):
     def parser(self):
         pass
 
+    def to_excel(self):
+        write = WriteXLSXCustom('.\\cnki\\' + self._get_cn_name())
+        title = {
+            '疾病编码': 'code',
+            '疾病名称': 'name',
+            '疾病中文名': 'jbzwm',
+            '疾病别名': 'jbbm',
+            '疾病英文名': 'jbywm',
+            '疾病类别': 'jblb',
+            '类别编码': 'lblj',
+            'ICD': 'icd',
+            '概述': 'gs',
+            '病因': 'by',
+            '药品列表': 'yplist',
+            '临床表现': 'lcbx',
+            '实验室检查': 'sysjc',
+            '其它辅助检查': 'fzjc',
+            '诊断': 'zd',
+            '鉴别诊断': 'jbzd',
+            '治疗': 'zl',
+            '预后': 'yh',
+            '并发症': 'bfz',
+            '流行病学': 'lxbx',
+            '发病机制': 'fbjz',
+            '预防': 'yf',
+            '文件编码': 'filename',
+            'vsm': 'vsm',
+            'ztCode': 'ztCode',
+            '来源': 'type',
+            'URL': 'url',
+        }
+
+        rowindex = 0
+        write.write(rowindex=rowindex, data=list(title.keys()))
+
+        for d in self._data_cursor.find():
+            rowindex += 1
+            row = []
+            for k, v in title.items():
+                if v in d:
+                    content = str(d[v])
+                    if content.startswith('<DIV>'):
+                        soup = BeautifulSoup(content, 'html.parser')
+                        row.append(remove_blank(soup.text))
+                    else:
+                        row.append(remove_blank(content))
+
+            write.write(rowindex, row)
+        write.close()
+
 
 class disease_pmmp(BaseCrawler):
     """
-        中国知网_医学知识库_疾病
+        名称：中国知网_医学知识库_疾病
+        URL：http://pmmp.cnki.net/Disease/Details.aspx?id=1
+        状态：完成
     """
 
     def _get_name(self):
@@ -322,15 +376,10 @@ class disease_pmmp(BaseCrawler):
             })
 
     def parser(self):
-        exclude_url = []
-        for d in self._data_cursor.find():
-            exclude_url.append(d['url'])
-
-        for d in self._html_cursor.find({'url': {'$in': exclude_url}}):
+        for d in self._html_cursor.find({'parser_enable': {'$exists': False}}):
             try:
                 soup = self.to_soup(d['html'])
-                tbody = soup.find('table')
-                trs = tbody.find_all('tr')
+                trs = soup.find_all('tr')
                 p = {
                     'url': d['url']
                 }
@@ -346,6 +395,7 @@ class disease_pmmp(BaseCrawler):
                             break
                         p[tds[0].text] = trs[i].find('td').text
                 self._data_cursor.insert_one(p)
+                self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
             except BaseException as e:
                 self.log.info(self._urlpool.update({'url': d['url']}, {'$set': {'isenable': '1'}}))
                 self.log.info(self._html_cursor.delete_one({'url': d['url']}))
@@ -353,10 +403,32 @@ class disease_pmmp(BaseCrawler):
                 self.log.error(traceback.format_exc())
                 raise BaseException(e)
 
+    def to_excel(self):
+        title = ['【 疾病名称 】', '【 英文名称 】', '【 别　　名 】',  '【 缩　　写 】', '【 类　　别 】', '【 ICD    号 】', '【 概　　述 】', '【 流行病学 】', '【 病因 】', '【 发病机制 】', '【 临床表现 】', '【 并发症 】', '【 实验室检查 】', '【 其他辅助检查 】', '【 诊断 】', '【 鉴别诊断 】', '【 治疗 】', '【 预后 】', '【 预防 】', 'url',]
+
+        write = WriteXLSXCustom('.\\cnki\\' + self._get_cn_name())
+
+        rowindex = 0
+        write.write(rowindex, title)
+
+        for d in self._data_cursor.find():
+            rowindex += 1
+            row = []
+            for k in title:
+                if k in d:
+                    row.append(remove_blank(d[k]))
+                else:
+                    row.append('')
+            write.write(rowindex, row)
+
+        write.close()
+
 
 class operation_pmmp(BaseCrawler):
     """
-        中国知网_医学知识库_手术
+        名称：中国知网_医学知识库_手术
+        URL：http://pmmp.cnki.net/Operation/Details.aspx?id=810
+        状态：完成
     """
 
     def _get_name(self):
@@ -389,15 +461,10 @@ class operation_pmmp(BaseCrawler):
             })
 
     def parser(self):
-        exclude_url = []
-        for d in self._data_cursor.find():
-            exclude_url.append(d['url'])
-
-        for d in self._html_cursor.find({'url': {'$in': exclude_url}}):
+        for d in self._html_cursor.find({'parser_enable': {'$exists': False}}):
             try:
                 soup = self.to_soup(d['html'])
-                tbody = soup.find('table')
-                trs = tbody.find_all('tr')
+                trs = soup.find_all('tr')
                 p = {
                     'url': d['url']
                 }
@@ -413,6 +480,7 @@ class operation_pmmp(BaseCrawler):
                             break
                         p[tds[0].text] = trs[i].find('td').text
                 self._data_cursor.insert_one(p)
+                self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
             except BaseException as e:
                 self.log.info(self._urlpool.update({'url': d['url']}, {'$set': {'isenable': '1'}}))
                 self.log.info(self._html_cursor.delete_one({'url': d['url']}))
@@ -421,14 +489,34 @@ class operation_pmmp(BaseCrawler):
                 # raise BaseException(e)
 
     def to_excel(self):
-        w = WriteXLSX(path='D://Temp//' + self._get_name() + '.xlsx')
-        w.write(self._get_name(), 'data')
+        title = ['【 手术名称 】', '【 别名 】', '【 英文名 】', '【 分类 】', '【  ICD编码 】', '【  概述 】',
+                 '【  相关解剖 】', '【  适应症 】', '【  禁忌症 】', '【  术前准备 】', '【  麻醉和体位 】',
+                 '【  手术步骤  】', '【  术中注意要点 】', '【  术后处理 】', '【  述评 】', 'url', ]
+
+        write = WriteXLSXCustom('.\\cnki\\' + self._get_cn_name())
+
+        rowindex = 0
+        write.write(rowindex, title)
+
+        for d in self._data_cursor.find():
+            rowindex += 1
+            row = []
+            for k in title:
+                if k in d:
+                    row.append(remove_blank(d[k]))
+                else:
+                    row.append('')
+            write.write(rowindex, row)
+
+        write.close()
 
 
 class operation_lczl(BaseCrawler):
     """
-            http://lczl.cnki.net/jb/index
-        """
+        名称：中国知网_临床诊疗知识库_操作规范
+        URL：http://lczl.cnki.net/jb/index
+        状态：完成
+    """
 
     def _get_name(self):
         return '中国知网_临床诊疗知识库_操作规范'
@@ -497,21 +585,55 @@ class operation_lczl(BaseCrawler):
         pass
 
     def to_excel(self):
-        w = WriteXLSX(path='D://Temp//' + self._get_name() + '.xlsx')
-        w.write(self._get_name(), 'data')
+        write = WriteXLSXCustom('.\\cnki\\' + self._get_cn_name())
+        title = {
+            '名称': 'name',
+            '别名': 'othername',
+            '禁忌症': 'taboo',
+            '准备': 'preparation',
+            '操作规范编码': 'code',
+            '适应症': 'adaptation',
+            '方法': 'method',
+            '结果判断': 'result',
+            '注意事项': 'notice',
+            '分类名称': 'routename',
+            '分类代码': 'route',
+            'vsm': 'vsm',
+            '来源': 'type',
+            'URL': 'url',
+        }
+
+        rowindex = 0
+        write.write(rowindex=rowindex, data=list(title.keys()))
+
+        for d in self._data_cursor.find():
+            rowindex += 1
+            row = []
+            for k, v in title.items():
+                if v in d:
+                    content = str(d[v])
+                    if content.startswith('<DIV>'):
+                        soup = BeautifulSoup(content, 'html.parser')
+                        row.append(remove_blank(soup.text))
+                    else:
+                        row.append(remove_blank(content))
+
+            write.write(rowindex, row)
+        write.close()
 
 
 class diagnostic_examination(BaseCrawler):
     """
         名称：中国知网_医学知识库_辅助检查库
         URL：http://pmmp.cnki.net/DiagnosticExamination/Details.aspx?id=1
+        状态：完成
     """
 
     def _get_name(self):
-        return '中国医学知识库_辅助检查库'
+        return '中国知网_医学知识库_辅助检查库'
 
     def _get_cn_name(self):
-        return '中国医学知识库_辅助检查库'
+        return '中国知网_医学知识库_辅助检查库'
 
     def _init_url(self):
         result = []
@@ -537,15 +659,14 @@ class diagnostic_examination(BaseCrawler):
             })
 
     def parser(self):
-        for d in self._html_cursor.find():
+        for d in self._html_cursor.find({'parser_enable': {'$exists': False}}):
             try:
                 soup = self.to_soup(d['html'])
-                tbody = soup.find('table')
-                trs = tbody.find_all('tr')
+                trs = soup.find_all('tr')
                 p = {
                     'url': d['url']
                 }
-                i = 0
+                i = -1
                 while True:
                     i += 1
                     tds = trs[i].find_all('td')
@@ -557,6 +678,7 @@ class diagnostic_examination(BaseCrawler):
                             break
                         p[tds[0].text] = trs[i].find('td').text
                 self._data_cursor.insert_one(p)
+                self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
             except BaseException as e:
                 self.log.info(self._urlpool.update({'url': d['url']}, {'$set': {'isenable': '1'}}))
                 self.log.info(self._html_cursor.delete_one({'url': d['url']}))
@@ -565,21 +687,39 @@ class diagnostic_examination(BaseCrawler):
                 # raise BaseException(e)
 
     def to_excel(self):
-        w = WriteXLSX(path='D://Temp//' + self._get_name() + '.xlsx')
-        w.write(self._get_name(), 'data')
+        title = ['【 检查名称 】', '【 分类 】', '【 英文名 】', '【 别名 】', '【 概述 】', '【临床意义】', '【 原理 】',
+                 '【正常值】', '【 试剂】', '【操作方法】', '【附注】', 'url', ]
+
+        write = WriteXLSXCustom('.\\cnki\\' + self._get_cn_name())
+
+        rowindex = 0
+        write.write(rowindex, title)
+
+        for d in self._data_cursor.find():
+            rowindex += 1
+            row = []
+            for k in title:
+                if k in d:
+                    row.append(remove_blank(d[k]))
+                else:
+                    row.append('')
+            write.write(rowindex, row)
+
+        write.close()
 
 
 class auxiliary_examination_lczl(BaseCrawler):
     """
         名称：中国知网_诊疗知识库_辅助检查
         URL：http://lczl.cnki.net/jc/index
+        状态：完成
     """
 
     def _get_cn_name(self):
-        return '中国知网_诊疗知识库_辅助检查'
+        return '中国知网_临床诊疗知识库_辅助检查'
 
     def _get_name(self):
-        return '中国知网_诊疗知识库_辅助检查'
+        return '中国知网_临床诊疗知识库_辅助检查'
 
     def _init_url(self):
         self._urlpool.save_url({
@@ -611,9 +751,9 @@ class auxiliary_examination_lczl(BaseCrawler):
             url = 'http://lczl.cnki.net/jcdetail/getdata?code={code}'
             for i in res.json()['list']:
                 urls.append({
-                    'url': url.format(code=i['code']),
-                    'name': i['name'],
-                    'code': i['code'],
+                    'url': url.format(code=i['filename']),
+                    'name': i['cname'],
+                    'code': i['filename'],
                     'type': self._cn_name,
                     'tree': 2
                 })
@@ -642,22 +782,39 @@ class auxiliary_examination_lczl(BaseCrawler):
         pass
 
     def to_excel(self):
-        write = WriteXLSXCustom(self._get_cn_name())
-        title = []
+        write = WriteXLSXCustom('.\\cnki\\' + self._get_cn_name())
+        title = {
+            '中文名称': 'name',
+            '英文名称': 'ename',
+            '类别代码': 'route',
+            '检查代码': 'code',
+            '正常值': 'common',
+            '试剂': 'agentia',
+            '概述': 'overview',
+            '原理': 'principle',
+            '临床意义': 'meaning',
+            '操作方法': 'operation',
+            '附注': 'tips',
+            '其它': 'othername',
+            'vsm': 'vsm',
+            'URL': 'url',
+            '来源': 'type',
+        }
 
         rowindex = 0
-        for d in self._data_cursor.find():
-            if rowindex == 0:
-                # write title
-                title += list(d.keys())
-                write.write(rowindex=rowindex, data=title)
+        write.write(rowindex=rowindex, data=list(title.keys()))
 
+        for d in self._data_cursor.find():
             rowindex += 1
             row = []
-            for k in title:
-                if k in d and d[k]:
-                    soup = BeautifulSoup(d[k], 'html.parser')
-                    row.append(remove_blank(soup.text))
+            for k, v in title.items():
+                if v in d:
+                    content = str(d[v])
+                    if content.startswith('<DIV>'):
+                        soup = BeautifulSoup(content, 'html.parser')
+                        row.append(remove_blank(soup.text))
+                    else:
+                        row.append(remove_blank(content))
 
             write.write(rowindex, row)
         write.close()
