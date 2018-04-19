@@ -5,6 +5,7 @@
 import datetime
 import time
 import re
+from random import random
 
 from bs4 import BeautifulSoup
 
@@ -146,7 +147,7 @@ class cfda(BaseCrawler):
             if tbody:
                 pass
             else:
-                time.sleep(range(100, 500))
+                time.sleep(random.randint(100, 500))
                 return
 
         self.save_html(html, params)
