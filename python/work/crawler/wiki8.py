@@ -4,24 +4,27 @@
 # 医学百科
 import re
 
-import xlsxwriter
 from bs4 import Tag
 
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils.common import remove_blank
 from python.no_work.utils.excel import WriteXLSXCustom
 
+DOMINA = 'https://www.wiki8.com'
+
 
 class disease(BaseCrawler):
-    def __init__(self, ip):
-        self.domain = 'https://www.wiki8.com'
-        super().__init__(ip)
+    """
+        名称：医学百科_疾病百科
+        URL：https://www.wiki8.com/Categorize/%E7%96%BE%E7%97%85.html
+        状态：完成
+    """
 
     def _get_name(self):
-        return 'wiki8_disease'
+        return '医学百科_疾病百科'
 
     def _get_cn_name(self):
-        return '医学百科_疾病'
+        return '医学百科_疾病百科'
 
     def _init_url(self):
         url = 'https://www.wiki8.com/Categorize/%E7%96%BE%E7%97%85_{page}.html'
@@ -36,7 +39,7 @@ class disease(BaseCrawler):
         soup = self.to_soup(res.text)
         for a in soup.find(id='treeRoot').find_all('a'):
             result.append({
-                'url': self.domain + a['href'],
+                'url': DOMINA + a['href'],
                 'name': a.text,
                 'type': self._cn_name,
                 'tree': 0
@@ -45,7 +48,7 @@ class disease(BaseCrawler):
 
     def startup(self, d):
         res = self._crawler.get(d['url'])
-        if res.status_code != 200:
+        if not res:
             return
 
         soup = self.to_soup(res.text)
@@ -59,7 +62,7 @@ class disease(BaseCrawler):
             result = []
             for a in a_tags:
                 result.append({
-                    'url': self.domain + a['href'],
+                    'url': DOMINA + a['href'],
                     'name': a.text,
                     'type': self._cn_name,
                     'tree': 1
@@ -68,7 +71,7 @@ class disease(BaseCrawler):
             if page:
                 _a = re.findall('[0-9]+', page.li.text)
                 if _a[1] == '1':
-                    for i in range(2, int(_a[0])+1):
+                    for i in range(2, int(_a[0]) + 1):
                         result.append({
                             'url': d['url'].replace('.html', '_' + str(i) + '.html'),
                             'type': self._cn_name,
@@ -82,7 +85,7 @@ class disease(BaseCrawler):
 
     def parser(self):
         result = []
-        for d in self._html_cursor.find({'tree': 1}):
+        for d in self._html_cursor.find({'tree': 1, 'parser_enable': {'$exists': False}}):
             soup = self.to_soup(d['html'])
             key = ''
             p = {
@@ -94,7 +97,6 @@ class disease(BaseCrawler):
             if content is None:
                 self.log.error(d['url'])
                 continue
-            print(d['name'])
             for tag in content.contents:
                 if type(tag) != Tag or tag.name == 'div':
                     continue
@@ -110,6 +112,7 @@ class disease(BaseCrawler):
                     p[key] += tag.text
                     p[key] += '\n'
             result.append(p)
+            self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
         self._data_cursor.insert_many(result)
 
     def to_excel(self):
@@ -135,7 +138,7 @@ class disease(BaseCrawler):
             '鉴别诊断': ['需要与鉴别疾病', '需要与相鉴别疾病', '诊断依据', '诊断与鉴别诊断'],
             '病因病理病机': ['发病机制', '病理学特征', '病原学', '发病机理', '病理改变', '病理病机', '常见机制'],
         }
-        write = WriteXLSXCustom(self._get_cn_name())
+        write = WriteXLSXCustom('.\\wiki8\\' + self._get_cn_name())
 
         # 写入表头
         rowindex = 0
@@ -154,3 +157,75 @@ class disease(BaseCrawler):
         write.close()
 
 
+class operation(BaseCrawler):
+    def _get_name(self):
+        return '医学百科_手术百科'
+
+    def _get_cn_name(self):
+        return '医学百科_手术百科'
+
+    def _init_url(self):
+        url = 'https://www.wiki8.com/Categorize/%E6%89%8B%E6%9C%AF_{page}.html'
+        result = []
+        for p in range(1, 109):
+            result.append({
+                'url': url.format(page=p),
+                'type': self._cn_name,
+                'tree': 0
+            })
+        self._urlpool.save_url(result)
+
+    def startup(self, d):
+        res = self._crawler.get(d['url'])
+        if not res:
+            return
+
+        soup = self.to_soup(res.text)
+
+        if d['tree'] == 0:
+            a_tags = soup.find('ul', class_='cateList').find_all('a')
+            result = []
+            for a in a_tags:
+                result.append({
+                    'url': DOMINA + a['href'],
+                    'name': a.text,
+                    'type': self._cn_name,
+                    'tree': 1
+                })
+            self._urlpool.save_url(result)
+        elif d['tree'] == 1:
+            # 这里是否需要校验一下，请求的数据是否有效
+            pass
+        self.save_html(res.text, d)
+
+    def parser(self):
+        result = []
+        for d in self._html_cursor.find({'tree': 1, 'parser_enable': {'$exists': False}}):
+            soup = self.to_soup(d['html'])
+            key = ''
+            p = {
+                'url': d['url'],
+                'name': d['name'],
+                'type': d['type'],
+            }
+            content = soup.find(id='content')
+            if content is None:
+                self.log.error(d['url'])
+                continue
+            for tag in content.contents:
+                if type(tag) != Tag or tag.name == 'div':
+                    continue
+
+                if tag.name == 'h2':
+                    key = re.sub('[·' + d['name'].replace('-', '\\-') + ']', '', tag.text)
+                # elif tag.name == 'h3':
+                #     key += tag.text
+                elif tag.name in ['p', 'h4', 'h3']:
+                    key = re.sub('[. 的0-9]', '', key)
+                    if key not in p:
+                        p[key] = ''
+                    p[key] += tag.text
+                    p[key] += '\n'
+            result.append(p)
+            self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
+        self._data_cursor.insert_many(result)
