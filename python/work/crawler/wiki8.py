@@ -8,29 +8,7 @@ import xlsxwriter
 from bs4 import Tag
 
 from python.no_work.crawler.base_crawler import BaseCrawler
-
-title = {
-            'key': [],
-            'regex': [],
-            'url': [],
-            '疾病名称': [],
-            '英文名称': [],
-            '别名': ['疾病别名'],
-            'ICD号': ['ICD编码'],
-            '临床分类': ['常见类型'],
-            '概述': [],
-            '疾病概述': [],
-            '病因学': ['病因', '主要病因', '病因和发病机制', '疾病病因', '进入人体途径及影响程度因素', '危险因素'],
-            '临床表现': ['症状体征', '传播途径', '症状'],
-            '治疗措施': ['治疗方案', '治疗', '药物治疗', '治疗方法', '适应症', '禁忌症', '手术治疗', '治疗原则', '用药原则', '相关用药', '防治', '处理'],
-            '诊断': ['诊断检查', '诊断及相关检查', '诊断要点', '诊断标准'],
-            '流行病学': ['流行病学资料', '流行学'],
-            '预防': ['预后及预防'],
-            '并发症': ['并发症及后遗症'],
-            '实验室检查': ['辅助检查', '相关检查', '其他辅助检查'],
-            '鉴别诊断': ['需要与鉴别疾病', '需要与相鉴别疾病', '诊断依据', '诊断与鉴别诊断'],
-            '病因病理病机': ['发病机制', '病理学特征', '病原学', '发病机理', '病理改变', '病理病机', '常见机制'],
-        }
+from python.no_work.utils.excel import WriteXLSXCustom
 
 
 class disease(BaseCrawler):
@@ -42,7 +20,7 @@ class disease(BaseCrawler):
         return 'wiki8_disease'
 
     def _get_cn_name(self):
-        return '医学百科-疾病'
+        return '医学百科_疾病'
 
     def _init_url(self):
         url = 'https://www.wiki8.com/Categorize/%E7%96%BE%E7%97%85_{page}.html'
@@ -132,3 +110,49 @@ class disease(BaseCrawler):
                     p[key] += '\n'
             result.append(p)
         self._data_cursor.insert_many(result)
+
+    def to_excel(self):
+        title = {
+            'key': [],
+            'regex': [],
+            'url': [],
+            '疾病名称': [],
+            '英文名称': [],
+            '别名': ['疾病别名'],
+            'ICD号': ['ICD编码'],
+            '临床分类': ['常见类型'],
+            '概述': [],
+            '疾病概述': [],
+            '病因学': ['病因', '主要病因', '病因和发病机制', '疾病病因', '进入人体途径及影响程度因素', '危险因素'],
+            '临床表现': ['症状体征', '传播途径', '症状'],
+            '治疗措施': ['治疗方案', '治疗', '药物治疗', '治疗方法', '适应症', '禁忌症', '手术治疗', '治疗原则', '用药原则', '相关用药', '防治', '处理'],
+            '诊断': ['诊断检查', '诊断及相关检查', '诊断要点', '诊断标准'],
+            '流行病学': ['流行病学资料', '流行学'],
+            '预防': ['预后及预防'],
+            '并发症': ['并发症及后遗症'],
+            '实验室检查': ['辅助检查', '相关检查', '其他辅助检查'],
+            '鉴别诊断': ['需要与鉴别疾病', '需要与相鉴别疾病', '诊断依据', '诊断与鉴别诊断'],
+            '病因病理病机': ['发病机制', '病理学特征', '病原学', '发病机理', '病理改变', '病理病机', '常见机制'],
+        }
+        write = WriteXLSXCustom(self._get_cn_name())
+
+        # 写入表头
+        rowindex = 0
+        write.write(rowindex=rowindex, data=list(title.keys()))
+
+        for d in self._data_cursor.find():
+            rowindex += 1
+            row = []
+            for k, v in title.items():
+                col = ''
+                for k1 in [k] + v:
+                    if k1 in d:
+                        col += k1 + ':' + self.remove_blank(d[k1]) + '\n'
+                row.append(col)
+            write.write(rowindex=rowindex, data=row)
+
+    @staticmethod
+    def remove_blank(s):
+        return re.sub('[ \n\r]', '', s)
+
+
