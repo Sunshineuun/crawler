@@ -79,4 +79,4 @@ def getNowDate():
 
 
 def remove_blank(s):
-    return re.sub('[ \n\r]', '', s)
+    return re.sub('[  \n\r]', '', s)
