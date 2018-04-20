@@ -5,7 +5,7 @@
 import datetime
 import time
 import re
-from random import random
+import random
 
 from bs4 import BeautifulSoup
 
