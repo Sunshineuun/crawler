@@ -157,7 +157,7 @@ class cfda(BaseCrawler):
         # 说明响应变慢了，等等，给服务器减压。
         # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
         if date > 10 or date < 0.3:
-            time.sleep(range(100, 500))
+            time.sleep(random.randint(100, 500))
 
     def parser(self):
         self.log.info('开始')
