@@ -184,7 +184,7 @@ class cfda(BaseCrawler):
                 self._data_cursor.insert(row)
                 self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
             else:
-                self._urlpool.update({'url': d['url']}, {'isenable': '1'})
+                self._urlpool.update({'url': d['url']}, {'$set': {'isenable': '1'}})
                 self._html_cursor.delete_one({'url': d['url']})
 
     def parser2(self):
