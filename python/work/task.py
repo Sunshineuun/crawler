@@ -29,10 +29,11 @@ IP = '192.168.5.94'
 # 手术----------------------------------------------------------------------------------
 # cnki.operation_pmmp(IP).to_excel() # 完成 v1.1
 # cnki.operation_lczl(IP).to_excel()  # 完成 v1.1
-# wiki8.operation(IP).to_excel()  #
+# wiki8.operation(IP).to_excel()  # 完成 v1.1
+
 # 检查----------------------------------------------------------------------------------
 # cnki.diagnostic_examination(IP).to_excel()  # 完成 v1.1
 # cnki.auxiliary_examination_lczl(IP).to_excel()  # 完成 v1.1
 
 if __name__ == '__main__':
-    wiki8.operation(IP).get_title()
+    wiki8.disease(IP).to_excel()
