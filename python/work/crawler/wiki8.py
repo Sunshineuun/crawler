@@ -117,9 +117,8 @@ class disease(BaseCrawler):
 
     def to_excel(self):
         title = {
-            'key': [],
-            'regex': [],
             'url': [],
+            'name': [],
             '疾病名称': [],
             '英文名称': [],
             '别名': ['疾病别名'],
@@ -152,6 +151,8 @@ class disease(BaseCrawler):
                 for k1 in [k] + v:
                     if k1 in d:
                         col += k1 + ':' + remove_blank(d[k1]) + '\n'
+                if col == '':
+                    col = '-'
                 row.append(col)
             write.write(rowindex=rowindex, data=row)
         write.close()
@@ -230,3 +231,37 @@ class operation(BaseCrawler):
             result.append(p)
             self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
         self._data_cursor.insert_many(result)
+
+    def to_excel(self):
+        title = {
+            'url': [],
+            'name': [],
+            '英文名及缩写': ['英文名', '英文参考'],
+            '别名': [],
+            'ICD9-CM3编码': ['ID编码', 'ICD编码', 'ICD编码:', 'D编码', 'CD编码', 'ICD编码：', 'IC编码', 'I编码=编码'],
+            '概述': [],
+            '适应症/证': ['适应证', '适应症', '适应', '适应证、禁忌证', '分类及适应症'],
+            '禁忌症/证': ['禁忌证', '禁忌症', '禁忌'],
+            '术前准备': ['准备', '前准备', '术准备', '前准备及麻醉', '术前准备及麻醉'],
+            '麻醉': ['麻醉体位', '麻醉和体位', '麻醉和体', '麻醉和位', '麻醉与体位', '麻醉体', '麻醉和', '麻醉位', '醉和体位', '醉体位'],
+            '操作方法及步骤': ['方法', '手术方法', '手方法', '步骤', '手步骤', '手术步骤', '手步骤、中注意事项', '术步骤', '操作方'],
+            '术后处理': ['术后', '操作后管理', '后处理', '后处', '后理', '后', '处理'],
+            '注意事项': ['中注意事项', '中注意要', '术中注意事项', '中注意事项及并发症处理', '中注意要点', '术中注意要点', '注意要点', '术注意要点'],
+            '并发症': ['中并发症及处理', '副作用、并发症及防治', '并发症及处理', '常见后并发症及处理', '后并发症', '晚期并发症', '后并发症及处理', '并症', '并发'],
+        }
+        write = WriteXLSXCustom('.\\wiki8\\' + self._get_cn_name())
+        # 写入表头
+        rowindex = 0
+        write.write(rowindex=rowindex, data=list(title.keys()))
+
+        for d in self._data_cursor.find():
+            rowindex += 1
+            row = []
+            for k, v in title.items():
+                col = ''
+                for k1 in [k] + v:
+                    if k1 in d:
+                        col += k1 + ':' + remove_blank(d[k1]) + '\n'
+                row.append(col)
+            write.write(rowindex=rowindex, data=row)
+        write.close()
