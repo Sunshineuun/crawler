@@ -63,6 +63,7 @@ class disease(BaseCrawler):
             for a in a_tags:
                 result.append({
                     'url': DOMINA + a['href'],
+                    'url1': d['url'],
                     'name': a.text,
                     'type': self._cn_name,
                     'tree': 1
@@ -74,6 +75,7 @@ class disease(BaseCrawler):
                     for i in range(2, int(_a[0]) + 1):
                         result.append({
                             'url': d['url'].replace('.html', '_' + str(i) + '.html'),
+                            'url1': d['url'],
                             'type': self._cn_name,
                             'tree': 0
                         })
