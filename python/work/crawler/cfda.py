@@ -161,7 +161,7 @@ class cfda(BaseCrawler):
 
     def parser(self):
         self.log.info('开始')
-        query = {'url': {'$regex': 'http:[a-z0-9/.]+content.jsp\?'}}
+        query = {'tree': 1, 'parser_enable': {'$exists': False}}
         for i, d in enumerate(self._html_cursor.find(query)):
             if (i + 1) % 10000 == 0:
                 self.log.info(i)
