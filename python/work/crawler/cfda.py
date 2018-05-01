@@ -162,7 +162,7 @@ class cfda(BaseCrawler):
     def parser(self):
         self.log.info('开始')
         query = {'tree': 1, 'parser_enable': {'$exists': False}}
-        for i, d in enumerate(self._html_cursor.find(query)):
+        for i, d in enumerate(self._html_cursor.find(query, no_cursor_timeout=True)):
             if (i + 1) % 10000 == 0:
                 self.log.info(i)
 
