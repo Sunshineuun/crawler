@@ -69,6 +69,7 @@ ZC_EX = ['气体', '医用氧(气态分装)', '医用氧', '医用氧(气态)', 
          ]
 PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医用氧气', '医用氧(液态)']
 
+RE_COMPILE = re.compile('869[0-9]{11}')
 
 class cfda(BaseCrawler):
     """
@@ -179,8 +180,15 @@ class cfda(BaseCrawler):
                     continue
                 row[text[1]] = text[2]
 
+            text_b = None
+            row_b = None
+
+            if '药品本位码' in row:
+                text_b = RE_COMPILE.findall(d['text']).sort()
+                row_b = RE_COMPILE.findall(row['药品本位码']).sort()
+
             # 数据有效加入，数据无效进行更新
-            if d['text'].__contains__(row['药品本位码']):
+            if text_b == row_b:
                 self._data_cursor.insert(row)
                 self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
             else:
