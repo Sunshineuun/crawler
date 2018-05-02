@@ -227,6 +227,7 @@ class cfda(BaseCrawler):
         :return:
         """
         self.log.info('数据库存储开始')
+        self.oralce_cursor.executeSQL('DELETE KBMS_DFSX_KNOWLEDGE_UP_BAK')
 
         sql = 'INSERT INTO KBMS_DFSX_KNOWLEDGE_UP_BAK (ID, PRODUCT_NAME, TRAD_NAME, SPEC, ZC_FORM, PERMIT_NO, PRODUCTION_UNIT, CODE_REMARK, TYPE) VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9)'
         params = {
