@@ -71,6 +71,7 @@ PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医�
 
 RE_COMPILE = re.compile('869[0-9]{11}')
 
+
 class cfda(BaseCrawler):
     """
     国家食品药品监督管理总局
@@ -180,15 +181,17 @@ class cfda(BaseCrawler):
                     continue
                 row[text[1]] = text[2]
 
-            text_b = None
-            row_b = None
+            text_b = []
+            row_b = []
 
             if '药品本位码' in row:
-                text_b = RE_COMPILE.findall(d['text']).sort()
-                row_b = RE_COMPILE.findall(row['药品本位码']).sort()
+                text_b = RE_COMPILE.findall(d['text'])
+                row_b = RE_COMPILE.findall(row['药品本位码'])
+                text_b.sort()
+                row_b.sort()
 
             # 数据有效加入，数据无效进行更新
-            if text_b == row_b:
+            if ''.join(row_b).__contains__(''.join(text_b)):
                 self._data_cursor.insert(row)
                 self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
             else:
