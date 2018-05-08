@@ -88,7 +88,7 @@ class zhongyaofangji(BaseCrawler):
         耗时......1222.376973
         :return:
         """
-        for data in self._html_cursor.find():
+        for data in self._html_cursor.find({'parser_enable': {'$exists': False}}):
             soup = BeautifulSoup(data['html'], 'html.parser')
             divspider = soup.find('div', class_='spider')
             if divspider is None:
@@ -96,7 +96,7 @@ class zhongyaofangji(BaseCrawler):
                 self.log.error(data)
             row = {}
             for tag in divspider.children:
-                if tag.name not in ['p', 'h2']:
+                if tag.name not in ['p', 'h2', 'div']:
                     continue
                 elif tag.name == 'h2':
                     if 'name' in row:
@@ -104,28 +104,12 @@ class zhongyaofangji(BaseCrawler):
                         row.clear()
                     row['name'] = tag.text
                     continue
-                elif tag.name == 'p':
+                elif tag.name == 'p' or \
+                        ('yfpzz' in tag.attrs['class'] and
+                                 tag.name == 'div'):
                     key = reg('【[\u4e00-\u9fa5]+】', tag.text)
                     row[key] = tag.text.replace(key, '')
 
+            self._html_cursor.update_one({'url': data['url']}, {'$set': {'parser_enable': '成功'}})
             self._data_cursor.save(row)
-
-    def test(self):
-        try:
-            url = 'http://zhongyaofangji.com/a/aaiwan.html'
-            html = self._crawler.request_get_url(url).decode('gbk')
-            soup = BeautifulSoup(html, 'html.parser')
-            a_tags = soup.find_all('a', href=re.compile('http://zhongyaofangji.com/[a-z]/[a-z]+.html'))
-            _id = 0
-            for a in a_tags:
-                params = {
-                    '_id': _id,
-                    'url': a['href'],
-                    'type': 'zhongyaofangji-中药方剂'
-                }
-                self._urlpool.save_url(params)
-                _id += 1
-        except BaseException:
-            pass
-        finally:
-            self._crawler.driver.stop_client()
+            row.clear()
