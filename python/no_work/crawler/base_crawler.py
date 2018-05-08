@@ -36,7 +36,7 @@ class BaseCrawler(object):
         self._cn_name = self._get_cn_name()
 
         if not self.__name:
-            raise ValueError
+            raise ValueError("%s must have a name" % type(self).__name__)
 
         self._mongo = MongodbCursor(ip)
         self._urlpool = self.get_urlpool()
