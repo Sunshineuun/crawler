@@ -8,8 +8,9 @@ from abc import abstractmethod
 from bs4 import BeautifulSoup
 
 from python.no_work.utils import mlogger
-from python.no_work.utils.common import getNowDate
+from python.no_work.utils.common import getNowDate, remove_blank
 from python.no_work.utils.crawler import Crawler
+from python.no_work.utils.excel import WriteXLSXCustom
 from python.no_work.utils.memail import send_mail
 from python.no_work.utils.mongodb import MongodbCursor
 from python.no_work.utils.urlpool import URLPool
@@ -136,10 +137,27 @@ class BaseCrawler(object):
 
     def to_excel(self):
         """
-
         :return:
         """
-        pass
+        titles = []
+        write = WriteXLSXCustom('.\\cnki\\' + self._cn_name)
+        for data in self._data_cursor.find():
+            for k, v in data.items():
+                if k not in titles:
+                    titles.append(k)
+
+        rowindex = 0
+        write.write(rowindex=rowindex, data=titles)
+
+        for d in self._data_cursor.find():
+            rowindex += 1
+            row = []
+            for k in titles:
+                if k in d:
+                    row.append(remove_blank(str(d[k])))
+
+            write.write(rowindex, row)
+        write.close()
 
     def get_title(self):
         title = []
