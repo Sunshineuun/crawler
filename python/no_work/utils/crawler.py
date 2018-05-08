@@ -67,7 +67,7 @@ class Crawler(object):
         self.__error_cursor = self.__mongo['minnie']['crawler_error']
         # 驱动器地址
         self.__executable_path = 'C:\\chromedriver.exe'
-        # 日志地址
+        # 驱动器日志地址
         self.__service_log_path = 'D:\\Temp\\chromdriver.log'
         # 请求次数达到一定数量，切换代理。
         self.__request_count = 1
