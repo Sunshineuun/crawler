@@ -9,14 +9,15 @@ import pymongo
 
 from urllib import request, parse
 
+import requests
+from requests.exceptions import ProxyError, ChunkedEncodingError
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from urllib3 import HTTPSConnectionPool
 
-from python.no_work.utils import mlogger, USER_AGENT, PROXY_IP
+from python.no_work.utils import mlogger, USER_AGENT, PROXY_IP, PROXY_IP2
 from python.no_work.utils.common import getNowDate
-
-logger = mlogger.get_defalut_logger('crawler.log', 'crawler')
 
 
 def getHttpStatus(browser):
@@ -61,11 +62,12 @@ class Crawler(object):
     """
 
     def __init__(self):
+        self.__log = mlogger.mlog
         self.__mongo = pymongo.MongoClient('192.168.16.113', 27017)
         self.__error_cursor = self.__mongo['minnie']['crawler_error']
         # 驱动器地址
         self.__executable_path = 'C:\\chromedriver.exe'
-        # 日志地址
+        # 驱动器日志地址
         self.__service_log_path = 'D:\\Temp\\chromdriver.log'
         # 请求次数达到一定数量，切换代理。
         self.__request_count = 1
@@ -99,9 +101,6 @@ class Crawler(object):
                 'date': getNowDate()
             }
             self.__error_cursor.insert(error_info)
-
-        if self.__request_count % 500 == 0:
-            self.update_proxy()
 
         self.__request_count += 1
 
@@ -148,9 +147,6 @@ class Crawler(object):
             }
             self.__error_cursor.insert(error_info)
 
-        if self.__request_count % 500 == 0:
-            self.update_proxy()
-
         self.__request_count += 1
 
         return result
@@ -179,7 +175,7 @@ class Crawler(object):
 
     def update_proxy(self):
         proxy_ip = random.choice(PROXY_IP)
-        logger.info(proxy_ip)
+        self.__log.info(proxy_ip)
         # 退出
         if self.driver:
             self.driver.quit()
@@ -190,8 +186,10 @@ class Crawler(object):
             # 代理设置
             proxy = request.ProxyHandler({proxy_ip['type']: proxy_ip['ip'] + ':' + proxy_ip['port']})
             self.opener = request.build_opener(request.HTTPHandler, proxy)
-            self.opener.addheaders = [get_user_agent()]
-            request.install_opener(opener=self.opener)
+        else:
+            self.opener = request.build_opener(request.HTTPHandler)
+        self.opener.addheaders = [get_user_agent()]
+        request.install_opener(opener=self.opener)
 
     def new_driver(self, proxy_ip=None):
         options = webdriver.ChromeOptions()
@@ -217,3 +215,21 @@ class Crawler(object):
     def refresh(self):
         if self.driver:
             self.driver.refresh()
+
+    def get(self, url, params=None, **kwargs):
+        try:
+            res = requests.get(url, params=params, proxies=random.choice(PROXY_IP2), **kwargs)
+            if res.status_code == 200:
+                return res
+        except ChunkedEncodingError as chunkedEncodingError:
+            self.__log.error(chunkedEncodingError)
+        except ConnectionResetError as connectionResetError:
+            # 远程主机强迫关闭了一个现有的连接。
+            self.__log.error(connectionResetError)
+        except ProxyError as proxyerror:
+            self.__log.error(proxyerror)
+        except ConnectionError as connectionError:
+            self.__log.error(connectionError)
+        except BaseException:
+            self.__log.error(traceback.format_exc())
+        return False

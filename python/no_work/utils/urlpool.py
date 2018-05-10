@@ -103,17 +103,16 @@ class URLPool(object):
         for k, v in query.items():
             if k in update:
                 update.pop(k)
-        self.cursor.update(query, update)
+        return self.cursor.update(query, update, multi=True)
 
     def update_success_url(self, url):
-        if self.cursor.find({'url': url}).count() > 0:
-            self.cursor.update({
-                'url': url
-            }, {
-                '$set': {
-                    'isenable': '0'
-                }
-            })
+        return self.cursor.update({
+            'url': url
+        }, {
+            '$set': {
+                'isenable': '0'
+            }
+        }, multi=True)
 
 
 if __name__ == '__main__':

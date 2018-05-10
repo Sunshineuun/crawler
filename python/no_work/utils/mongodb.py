@@ -7,6 +7,10 @@
 3.MongoDB区分类型和大小写。
 4.MongoDB的文档不能有重复的键。
 5.文档的键是字符串。除了少数例外情况，键可以使用任意UTF-8字符。
+
+6.mongodb 聚合 count having count() > 1
+    url.aggregate(([{'$group': {'_id': '$url', 'count': {'$sum': 1}}},
+                              {"$match": {"count": {"$gt": 1}}}]),)
 """
 import datetime
 

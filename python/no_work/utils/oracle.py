@@ -1,10 +1,12 @@
 # -*- coding: UTF-8 -*-
+import traceback
+
 import cx_Oracle
 import pymysql
 
 from python.no_work.utils import mlogger, ORACLE_INFO
 
-logger = mlogger.get_defalut_logger('log/common.log', 'oracle')
+logger = mlogger.mlog
 
 
 class OralceCursor(object):
@@ -22,6 +24,7 @@ class OralceCursor(object):
             return count
         except Exception as e:
             logger.error(e)
+            logger.error(traceback.format_exc())
             self.minnie_oracle.rollback()
             return 0
 

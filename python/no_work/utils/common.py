@@ -76,3 +76,7 @@ def reg(pattern, s):
 
 def getNowDate():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def remove_blank(s):
+    return re.sub('[  \n\r]', '', s)

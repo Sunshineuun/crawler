@@ -3,9 +3,10 @@
 # qiushengming-minnie
 
 # info = 'archer/archer@localhost/minnie'
-ORACLE_INFO = 'luun/luun@192.168.16.113/sunshine'
+# ORACLE_INFO = 'luun/luun@192.168.16.113/sunshine'
 # info = 'kbms/kbms@192.168.5.24/orcl'
 # info = 'spiders/123456@192.168.4.30/orcl'  # 数据挖掘组数据解析支持
+ORACLE_INFO = 'kbms26_test/kbms26_test@192.168.1.41/orcl'
 
 USER_AGENT = [
     "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; AcooBrowser; .NET CLR 1.1.4322; .NET CLR 2.0.50727)",
@@ -81,8 +82,17 @@ PROXY_IP = [
     {'ip': '192.168.16.137', 'port': '6001', 'type': 'http'},
     {'ip': '192.168.16.113', 'port': '6001', 'type': 'http'},
     {'ip': '192.168.16.158', 'port': '6001', 'type': 'http'},
-    # {'ip': '192.168.16.212', 'port': '6001', 'type': 'http'},
+    {'ip': '192.168.16.169', 'port': '6001', 'type': 'http'},
+    {'ip': '192.168.16.145', 'port': '6001', 'type': 'http'},
     {}
+]
+PROXY_IP2 = [
+    {'http': 'http://192.168.16.137:6001'},  # 汤维斌-笔记本
+    {'http': 'http://192.168.16.158:6001'},  # 蔡康-台式机
+    # {'http': 'http://192.168.16.145:6001'},  # 尚梦思-台式机
+    {'http': 'http://192.168.16.113:6001'},  # 自己-台式机
+    {'http': 'http://192.168.16.169:6001'},  # 王富民-台式机
+    {'http': 'http://192.168.16.118:6001'},  # 自己-笔记本-可能会关机的
 ]
 
 MONGO_IP = '192.168.5.94'
