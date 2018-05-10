@@ -175,17 +175,20 @@ class cfda(BaseCrawler):
                 continue
             row[text[1]] = text[2]
 
-        if '药品本位码' in row:
-            text_b = RE_COMPILE.findall(d['text']).sort()
-            row_b = RE_COMPILE.findall(row['药品本位码']).sort()
+            if '药品本位码' in row:
+                text_b = RE_COMPILE.findall(d['text'])
+                row_b = RE_COMPILE.findall(row['药品本位码'])
+                text_b.sort()
+                row_b.sort()
+
             # 数据有效加入，数据无效进行更新
-            if text_b == row_b:
-                self._data_cursor.insert(row)
-                return True
+                if ''.join(row_b).__contains__(''.join(text_b)):
+                    self._data_cursor.insert(row)
+                    return True
+                else:
+                    return False
             else:
                 return False
-        else:
-            return False
 
     def parser_target_condition(self):
         return {'tree': 1}
