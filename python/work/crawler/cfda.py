@@ -71,6 +71,7 @@ PRODUCT_NAME_EX = ['氧', '氧(液态)', '氧(气态)', '医用液态氧', '医�
 
 RE_COMPILE = re.compile('869[0-9]{11}')
 
+
 class cfda(BaseCrawler):
     """
     国家食品药品监督管理总局
@@ -120,13 +121,14 @@ class cfda(BaseCrawler):
                     'tree': 0
                 }
                 result.append(p1)
-        self._urlpool.save_url(result)
+        return result
 
-    def startup(self, params):
+    def request(self, d):
         d1 = datetime.datetime.now()
-        html = self._crawler.driver_get_url(params['url'])
-        soup = BeautifulSoup(html, 'html.parser')
-        if params['tree'] == 0:
+        html = self._crawler.driver_get_url(d['url'])
+        soup = self.to_soup(html)
+
+        if d['tree'] == 0:
             a_tags = soup.find_all('a', href=re.compile(self.__href_re))
 
             if a_tags and len(a_tags):
@@ -135,7 +137,7 @@ class cfda(BaseCrawler):
                 # 更新链接请求成功
                 for a in a_tags:
                     url_list.append({
-                        'type': params['type'],
+                        'type': d['type'],
                         'url': self.__domain_url + reg(
                             'content.jsp\?tableId=[0-9]+&tableName=TABLE[0-9]+&tableView=[\u4e00-\u9fa50]+&Id=[0-9]+',
                             a['href']),
@@ -143,15 +145,11 @@ class cfda(BaseCrawler):
                         'tree': 1
                     })
                 self._urlpool.save_url(url_list)
-        elif params['tree'] == 1:
+        elif d['tree'] == 1:
             tbody = soup.find_all('tbody')
-            if tbody:
-                pass
-            else:
+            if not tbody:
                 time.sleep(random.randint(100, 500))
-                return
-
-        self.save_html(html, params)
+                return False, ''
 
         d2 = datetime.datetime.now()
         date = (d2 - d1).total_seconds()
@@ -159,41 +157,38 @@ class cfda(BaseCrawler):
         # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
         if date > 10 or date < 0.3:
             time.sleep(random.randint(100, 500))
+            return False, ''
 
-    def parser(self):
-        self.log.info('开始')
-        query = {'tree': 1, 'parser_enable': {'$exists': False}}
-        for i, d in enumerate(self._html_cursor.find(query, no_cursor_timeout=True)):
-            if (i + 1) % 10000 == 0:
-                self.log.info(i)
+        return True, html
 
-            soup = BeautifulSoup(d['html'], 'html.parser')
-            tr_tags = soup.find_all('tr')[1:-3]
-            row = {
-                '_id': d['_id'],
-                'url': d['url'],
-                'text': d['text']
-            }
-            for tr in tr_tags:
-                text = tr.text.split('\n')
-                if len(text) < 3:
-                    continue
-                row[text[1]] = text[2]
+    def parser(self, d):
+        soup = self.to_soup(d['html'])
+        tr_tags = soup.find_all('tr')[1:-3]
+        row = {
+            '_id': d['_id'],
+            'url': d['url'],
+            'text': d['text']
+        }
+        for tr in tr_tags:
+            text = tr.text.split('\n')
+            if len(text) < 3:
+                continue
+            row[text[1]] = text[2]
 
-            text_b = None
-            row_b = None
-
-            if '药品本位码' in row:
-                text_b = RE_COMPILE.findall(d['text']).sort()
-                row_b = RE_COMPILE.findall(row['药品本位码']).sort()
-
+        if '药品本位码' in row:
+            text_b = RE_COMPILE.findall(d['text']).sort()
+            row_b = RE_COMPILE.findall(row['药品本位码']).sort()
             # 数据有效加入，数据无效进行更新
             if text_b == row_b:
                 self._data_cursor.insert(row)
-                self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
+                return True
             else:
-                self._urlpool.update({'url': d['url']}, {'$set': {'isenable': '1'}})
-                self._html_cursor.delete_one({'url': d['url']})
+                return False
+        else:
+            return False
+
+    def parser_target_condition(self):
+        return {'tree': 1}
 
     def parser2(self):
         """
