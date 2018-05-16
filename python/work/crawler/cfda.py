@@ -146,7 +146,7 @@ class cfda(BaseCrawler):
         elif d['tree'] == 1:
             tbody = soup.find_all('tbody')
             if not tbody:
-                time.sleep(random.randint(100, 500))
+                time.sleep(random.randint(100, 300))
                 self._crawler.update_proxy()
                 return False, ''
 
