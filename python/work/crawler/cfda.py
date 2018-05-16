@@ -7,8 +7,6 @@ import time
 import re
 import random
 
-from bs4 import BeautifulSoup
-
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils.common import reg
 from python.no_work.utils.oracle import OralceCursor
@@ -157,6 +155,7 @@ class cfda(BaseCrawler):
         # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
         if date > 10 or date < 0.3:
             time.sleep(random.randint(100, 500))
+            self._crawler.update_proxy()
             return False, ''
 
         return True, html
