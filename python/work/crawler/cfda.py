@@ -147,16 +147,17 @@ class cfda(BaseCrawler):
             tbody = soup.find_all('tbody')
             if not tbody:
                 time.sleep(random.randint(100, 500))
+                self._crawler.update_proxy()
                 return False, ''
 
         d2 = datetime.datetime.now()
         date = (d2 - d1).total_seconds()
         # 说明响应变慢了，等等，给服务器减压。
         # 存在请求小于0.1秒的情况，这些都是有数据，只是返回不正常
-        if date > 10 or date < 0.3:
-            time.sleep(random.randint(100, 500))
-            self._crawler.update_proxy()
-            return False, ''
+        # if date > 10 or date < 0.3:
+        #     time.sleep(random.randint(100, 500))
+        #     self._crawler.update_proxy()
+        #     return False, ''
 
         return True, html
 
