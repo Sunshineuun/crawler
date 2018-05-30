@@ -50,6 +50,7 @@ class BaseCrawler(object):
         # 数据存储器
         self._html_cursor = self.__get_html_cursor()
         self._data_cursor = self.__get_data_cursor()
+        self._html_bak = self._mongo.get_cursor(self.__name, 'htmlbak')
 
         self.__init_url()
         self.__run()
@@ -129,9 +130,13 @@ class BaseCrawler(object):
                     self.log.info('已解析数量：' + str(i))
 
                 if self.parser(d):
-                    self._html_cursor.update_one({'url': d['url']}, {'$set': {'parser_enable': '成功'}})
+                    self._html_cursor.update_one({'url': d['url']},
+                                                 {'$set': {'parser_enable': '成功'}})
                 else:
-                    self._urlpool.update({'url': d['url']}, {'$set': {'isenable': '1'}})
+                    self._urlpool.update({'url': d['url']},
+                                         {'$set': {'isenable': '1',
+                                                   'insert_date': getNowDate()}})
+                    self._html_bak.insert(d)
                     self._html_cursor.delete_one({'url': d['url']})
         except BaseException as e:
             msg = '' + traceback.format_exc() + '\n' + str(d)
