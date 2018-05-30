@@ -122,6 +122,7 @@ class cfda(BaseCrawler):
         return result
 
     def request(self, d):
+        time.sleep(1)
         d1 = datetime.datetime.now()
         html = self._crawler.driver_get_url(d['url'])
         soup = self.to_soup(html)
@@ -146,7 +147,7 @@ class cfda(BaseCrawler):
         elif d['tree'] == 1:
             tbody = soup.find_all('tbody')
             if not tbody:
-                time.sleep(random.randint(100, 500))
+                time.sleep(random.randint(100, 300))
                 self._crawler.update_proxy()
                 return False, ''
 
@@ -175,20 +176,20 @@ class cfda(BaseCrawler):
                 continue
             row[text[1]] = text[2]
 
-            if '药品本位码' in row:
-                text_b = RE_COMPILE.findall(d['text'])
-                row_b = RE_COMPILE.findall(row['药品本位码'])
-                text_b.sort()
-                row_b.sort()
+        if '药品本位码' in row:
+            text_b = RE_COMPILE.findall(d['text'])
+            row_b = RE_COMPILE.findall(row['药品本位码'])
+            text_b.sort()
+            row_b.sort()
 
-            # 数据有效加入，数据无效进行更新
-                if ''.join(row_b).__contains__(''.join(text_b)):
-                    self._data_cursor.insert(row)
-                    return True
-                else:
-                    return False
+        # 数据有效加入，数据无效进行更新
+            if ''.join(row_b).__contains__(''.join(text_b)):
+                self._data_cursor.insert(row)
+                return True
             else:
                 return False
+        else:
+            return False
 
     def parser_target_condition(self):
         return {'tree': 1}
