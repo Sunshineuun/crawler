@@ -122,6 +122,7 @@ class cfda(BaseCrawler):
         return result
 
     def request(self, d):
+        time.sleep(1)
         d1 = datetime.datetime.now()
         html = self._crawler.driver_get_url(d['url'])
         soup = self.to_soup(html)
