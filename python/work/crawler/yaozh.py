@@ -10,6 +10,8 @@ import time
 from abc import abstractmethod, ABCMeta
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.select import Select
+
 from python.no_work.crawler.base_crawler import BaseCrawler
 from python.no_work.utils.common import getNowDate, reg
 
@@ -694,7 +696,7 @@ class yaozh_yaopinzhongbiao(BaseCrawler):
             count = int(reg('[0-9]+', page.text))
             self._urlpool.update({'url': url}, {'$set': {'count': count}})
 
-            if 30 < count <= 60:
+            if 30 < count:
                 self.log.info(d['drugName'] + ' >> ' + str(count))
                 self._urlpool.put({
                     'url': url.replace('p=1', 'p=2'),
@@ -702,14 +704,14 @@ class yaozh_yaopinzhongbiao(BaseCrawler):
                     'drugName': d['drugName'],
                     'tree': 2
                 })
-            elif 60 < count <= 90:
+            if 60 < count:
                 self._urlpool.put({
                     'url': url + '%20desc',
                     'type': self._cn_name,
                     'drugName': d['drugName'],
                     'tree': 2
                 })
-            elif count > 90:
+            if count > 90:
                 self._urlpool.put({
                     'url': url.replace('p=1', 'p=2') + '%20desc',
                     'type': self._cn_name,
@@ -721,3 +723,45 @@ class yaozh_yaopinzhongbiao(BaseCrawler):
 
     def parser(self, d):
         pass
+
+
+class yaozh_yaopinzhongbiao1(BaseCrawler):
+    key = ['序号', '流水号', '通用名', '剂型', '采购规格', '采购单位', '中标价',
+           '转换系数', '挂网类型', '药品属性', '附加属性', '生产企业', '生产企业编码号',
+           '中标企业编号', '中标企业', '基药编号', '是否医保']
+
+    def _get_name(self):
+        return "基层医疗卫生机构药品挂网采购目录"
+
+    def request(self, d):
+        self._crawler.driver_get_url('http://jy.hbjycg.com/ProcureCatalogList1.aspx')
+        driver = self._crawler.driver
+
+        # 选择页数
+        select = driver.find_element_by_id('AspNetPager1_pagesize')
+        Select(select).select_by_index(2)
+        for i in range(427):
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            trs = soup.find_all('tr')
+            for tr in trs[5:]:
+                row = {}
+                for i, td in enumerate(tr.find_all('td')):
+                    row[self.key[i]] = td.text
+                self._data_cursor.insert(row)
+            # 下一页
+            nextPage = driver.find_element_by_link_text('下一页')
+            nextPage.click()
+
+    def parser(self, d):
+        pass
+
+    def _get_cn_name(self):
+        return "基层医疗卫生机构药品挂网采购目录"
+
+    def _init_url(self):
+        result_list = [{
+            'url': 'http://jy.hbjycg.com/ProcureCatalogList1.aspx',
+            'type': self._get_cn_name(),
+            'tree': 1
+        }]
+        return result_list
