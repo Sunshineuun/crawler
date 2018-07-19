@@ -115,7 +115,7 @@ class cfda(BaseCrawler):
             for i in range(1, v['page'] + 1):
                 p1 = {
                     'url': url.format(code=v['code'], page=i),
-                    'type': 'CFDA-国产药',
+                    'type': 'CFDA-' + k,
                     'tree': 0
                 }
                 result.append(p1)
@@ -144,6 +144,8 @@ class cfda(BaseCrawler):
                         'tree': 1
                     })
                 self._urlpool.save_url(url_list)
+            else:
+                return False, ''
         elif d['tree'] == 1:
             tbody = soup.find_all('tbody')
             if not tbody:
@@ -182,7 +184,7 @@ class cfda(BaseCrawler):
             text_b.sort()
             row_b.sort()
 
-        # 数据有效加入，数据无效进行更新
+            # 数据有效加入，数据无效进行更新
             if ''.join(row_b).__contains__(''.join(text_b)):
                 self._data_cursor.insert(row)
                 return True
@@ -275,7 +277,7 @@ class cfda(BaseCrawler):
                 self.oralce_cursor.executeSQLParams(sql, row)
 
         # 更新数据
-        self.oralce_cursor.executeSQL(update_sql)
+        # self.oralce_cursor.executeSQL(update_sql)
         # 插入数据
-        self.oralce_cursor.executeSQL(insert_sql)
+        # self.oralce_cursor.executeSQL(insert_sql)
         self.log.info('数据库存储结束')
